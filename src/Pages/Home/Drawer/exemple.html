@@ -1,0 +1,90 @@
+<div id="client_edit" class="flex flex-col w-full">
+    <div class="flex h-full p-4 mt-12">
+        
+        <div class="flex flex-col h-full items-start mr-4 w-1/2 border-r-[1px] border-gray-200">
+            <div class="flex flex-row gap-2 px-3 py-1 bg-gray-50 ">
+
+                <div class="w-1 h-6 bg-red-400"></div>
+                <label class="text-xl font-normal text-gray-500">Liste de tous les entreprises
+                clients
+                </label>
+                <div class="w-full h-full mt-2 overflow-y-auto bg-gray-50">
+                    <span>
+                        <input id="main_search_client_project" placeholder="Chercher un client"  class="w-full bg-white input input-bordered">
+                    </span>
+                    <div class="p-4 mt-2 overflow-x-auto">
+                        <table class="table">
+                            <tbody id="all_etp_drawer"><tr>
+                            <td>
+                                <div class="flex items-center gap-3">
+                                    <div class="avatar">
+                                        <div class="w-24 h-16 rounded-xl">
+                                            <span class="flex items-center justify-center w-full h-full text-xl uppercase text-slate-600 bg-slate-200">2</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-bold uppercase">2ACF</div>
+                                        <div class="text-sm text-slate-500">2ACF forma-fusion.com</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-right">
+                                <button onclick="etpAssign(849, 1761, null)" class="btn btn-outline btn-success"><i class="fa-solid fa-plus"></i></button>
+                            </td>
+                            </tr>
+                             <tr>
+                                <td>
+                                    <div class="flex items-center gap-3">
+                                        <div class="avatar">
+                                            <div class="w-24 h-16 rounded-xl">
+                                                <img src="https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/entreprises/680f302f434c9.webp" class="object-cover w-20 h-auto" alt="ACTIV SOLUTIONS MADAGASCAR">
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div class="font-bold uppercase">ACTIV SOLUTIONS MADAGASCAR</div>
+                                            <div class="text-sm text-slate-500">activsolutionsforma-fusion.com</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-right">
+                                    <button onclick="etpAssign(849, 2039, null)" class="btn btn-outline btn-success"><i class="fa-solid fa-plus"></i></button>
+                                </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex flex-col items-start w-1/2 h-full">
+        <div class="inline-flex items-center gap-2 w-max">
+            <div class="flex flex-row gap-2 px-3 py-1 bg-gray-50 ">
+                <div class="w-1 h-6 bg-green-400"></div>
+                <label class="text-xl font-normal text-gray-500">Le client sélectionné pour ce
+                    projet</label>
+            </div>
+        </div>
+        <div class="w-full p-4 mt-2 overflow-x-auto">
+            <table class="table">
+                <tbody id="etp_drawer_added"><tr>
+        <td>
+            <div class="flex items-center gap-3">
+                <div class="avatar">
+                    <div class="w-24 h-16 rounded-xl">
+                        <img src="https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/entreprises/681a0e123a24f.webp" class="object-cover w-20 h-auto" alt="SALONE">
+                    </div>
+                </div>
+                <div>
+                    <div class="font-bold uppercase">SALONE</div>
+                    <div class="text-sm text-slate-500">saloneforma-fusion.com</div>
+                </div>
+            </div>
+             </td></tr>
+            </tbody>
+            </table>
+        </div>
+        </div>
+
+    </div>
+</div>   
