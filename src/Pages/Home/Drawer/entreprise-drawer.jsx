@@ -1,13 +1,37 @@
-import React, { useState, forwardRef } from "react";
- const EntrepriseDrawer = forwardRef(({ isOpen, onClose }, ref) => {
+import React, { useState, useEffect } from "react";
+import useApi from "../../../Hooks/Api";
 
+ const EntrepriseDrawer = (({ idEntreprise,isOpen, onClose }, ref) => {
   const [showClientEdit, setShowClientEdit] = useState(false);
+  const [entrepriseId, setEntrepriseId] = useState(idEntreprise);
+  const [entreprise, setEntreprise] = useState(null); 
+  const { callApi } = useApi();
 
-  const handleEdit = () => {
-    setShowClientEdit(!showClientEdit);
-  };
+  const handleEdit = () => setShowClientEdit(true);
 
 
+  useEffect(() => {
+    setEntrepriseId(idEntreprise);
+  }, [idEntreprise]);
+
+  useEffect(() => {
+    if (!entrepriseId) return;
+    const getEtp = async () => {
+      try {
+        const res = await callApi(`/cfp/etp-drawer/${entrepriseId}`);
+        setEntreprise(res);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getEtp();
+  }, [entrepriseId]);
+
+  if (!entreprise) return null;
+  const close = () =>{
+    onClose();
+    setEntreprise(null);
+  }
   return (
     <>{ !showClientEdit &&
     <div
@@ -27,7 +51,7 @@ import React, { useState, forwardRef } from "react";
           <i className="fa-solid fa-pen mr-1"></i>Changer l'entreprise
         </button>
         <button
-          onClick={onClose}
+          onClick={close}
           className="w-10 h-10 rounded-md hover:bg-gray-200 flex items-center justify-center text-gray-500"
         >
           <i className="fa-solid fa-xmark"></i>
@@ -47,8 +71,8 @@ import React, { useState, forwardRef } from "react";
               />
             </div>
             <div className="flex flex-col justify-start gap-y-2 w-full">
-              <h3 className="text-2xl font-bold text-gray-700">SALONE</h3>
-              <p className="text-base text-gray-500">Site web --</p>
+              <h3 className="text-2xl font-bold text-gray-700">{entreprise?.customer?.customerName}</h3>
+              <p className="text-base text-gray-500">{entreprise?.customer?.siteWeb}</p>
             </div>
           </div>
         </div>
@@ -63,13 +87,18 @@ import React, { useState, forwardRef } from "react";
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-900">
-                  <i className="fa-solid fa-user mr-1"></i> Admin_SALONE Admin_SALONE
+                  <i className="fa-solid fa-user mr-1"></i> 
+                  {entreprise?.referents[0]?.name ? entreprise.referents[0].name : ''}
+                  {entreprise?.referents[0]?.firstName ? entreprise.referents[0].firstName : ''}
+                  {entreprise?.referents[0]?.fonction ? entreprise.referents[0].fonction : '' }
                 </p>
                 <p className="text-sm text-gray-500">
-                  <i className="fa-solid fa-envelope mr-1"></i> salone@forma-fusion.com
+                  <i className="fa-solid fa-envelope mr-1"></i>
+                   {entreprise?.referents[0]?.email ? entreprise.referents[0].email : '' }
                 </p>
                 <p className="text-sm text-gray-500">
-                  <i className="fa-solid fa-phone mr-1"></i> --
+                  <i className="fa-solid fa-phone mr-1"></i> 
+                   {entreprise?.referents[0]?.phone ? entreprise.referents[0].phone : '' }
                 </p>
               </div>
             </div>
@@ -78,56 +107,77 @@ import React, { useState, forwardRef } from "react";
           {/* Autres référents */}
           <div className="mt-4">
             <p className="text-xl font-semibold text-gray-900 mb-2">Autres référents</p>
-            {/* Liste vide ou future boucle ici */}
+            {entreprise?.referents?.slice(1).map((referent, i) => (
+                <li key={i} className="pt-3 pb-0 sm:pt-4">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      {referent.photo ? (
+                        <img
+                          className="w-10 h-10 rounded-full"
+                          src={`https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/employes/${referent.photo}`}
+                          alt={referent.name || ''}
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full text-gray-500 font-bold text-2xl text-center bg-gray-200 relative">
+                          <p className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            {referent.name ? referent.name.charAt(0) : 'I'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex-1 min-w-0 ms-4">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        <i className="fa-solid fa-user text-sm mr-1" />
+                        {referent.name || ''} {referent.firstName || ''}{' '}
+                        {referent.fonction ? `(${referent.fonction})` : ''}
+                      </p>
+                      <p className="text-sm text-gray-500 truncate">
+                        <i className="fa-solid fa-envelope text-sm mr-1" />
+                        {referent.email || '--'}
+                      </p>
+                      <p className="text-sm text-gray-500 truncate">
+                        <i className="fa-solid fa-phone text-sm mr-1" />
+                        {referent.phone || '--'}
+                      </p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+
           </div>
 
-          {/* Projets en cours */}
-          <div className="mt-4">
-            <span className="text-md rounded-xl py-1 px-3 text-white bg-[#369ACC]"> En cours </span>
-          </div>
-
-          <div className="mt-1 overflow-x-auto">
-            <table className="min-w-full text-sm text-left">
-              <thead className="text-gray-700">
-                <tr>
-                  <th className="px-2 py-2">#</th>
-                  <th className="px-2 py-2">Cours</th>
-                  <th className="px-2 py-2">Ref</th>
-                  <th className="px-2 py-2">Lieu</th>
-                  <th className="px-2 py-2 text-center">
-                    <i className="fa-solid fa-user text-sm"></i>
-                  </th>
-                  <th className="px-2 py-2">Montant (Ar)</th>
-                  <th className="px-2 py-2">
-                    <i className="fa-solid fa-money-bill-transfer"></i>
-                  </th>
-                  <th className="px-2 py-2">Début - Fin</th>
-                  <th className="px-2 py-2 text-center">Détail</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-t">
-                  <td className="px-2 py-1">1</td>
-                  <td className="px-2 py-1">Bundle Power BI ...</td>
-                  <td className="px-2 py-1">SALONE</td>
-                  <td className="px-2 py-1">Antananarivo (101)</td>
-                  <td className="px-2 py-1 text-center">0</td>
-                  <td className="px-2 py-1">3.20M Ar</td>
-                  <td className="px-2 py-1">
-                    <i className="fa-solid fa-circle-question text-gray-500" title="Non facturé"></i>
-                  </td>
-                  <td className="px-2 py-1">4.07.25 - 26.09.25</td>
-                  <td className="px-2 py-1 text-center">
-                    <a href="/cfp/projets/849/detail">
-                      <i className="fa-solid fa-eye opacity-50"></i>
-                    </a>
-                  </td>
-                </tr>
-                {/* Ajoute ici d'autres lignes si nécessaire */}
-              </tbody>
-            </table>
-          </div>
-
+          {/* Projets */}
+          {entreprise.projects_future.length !==0 && 
+            <TableProject 
+              data={entreprise.projects_future}
+              etat={"Planifié"}  
+            />
+          }
+          {entreprise.projects_in_preparation.length !==0 && 
+            <TableProject 
+              data={entreprise.projects_in_preparation}
+              etat={"En préparation"}  
+            />
+          }
+          {entreprise.projects_in_progress.length !==0 && 
+            <TableProject 
+              data={entreprise.projects_in_progress}
+              etat={"encours"}  
+            />
+          }
+          {entreprise.projects_finished.length !==0 &&   
+           <TableProject 
+            data={entreprise.projects_finished}
+            etat={"Terminé"}  
+           />
+          }   
+          {entreprise.projects_fenced.length !==0 &&   
+           <TableProject 
+            data={entreprise.projects_fenced}
+            etat={"Cloturé"}  
+           />
+          }   
           {/* Tu peux ajouter les autres tableaux ici avec les mêmes structures (préparation, terminé, etc.) */}
         </div>
       </div>
@@ -268,5 +318,75 @@ function ClientEditDrawer({ onClose }) {
       </div>
     </div>
   );
+}
+
+function TableProject({data,etat }){
+  return (
+  <>
+          <div className="mt-4">
+            <span className={`text-md rounded-xl py-1 px-3 text-white 
+                    ${
+                    etat === "Cloturé"
+                      ? " bg-[#6F1926]"
+                      :etat === "encours"
+                      ? "bg-[#369ACC]"
+                      :etat === "En préparation"
+                      ? " bg-[#F8E16F]"
+                      :etat === "Planifié"
+                      ? " bg-[#CBABD1]"
+                      : etat === "Terminé"
+                      ? "bg-[#95CF92]"
+                      : "bg-gray-400 text-gray-800"
+                  }`}> {etat} </span>
+          </div>
+
+          <div className="mt-1 overflow-x-auto">
+            <table className="min-w-full text-sm text-left">
+              <thead className="text-gray-700">
+                <tr>
+                  <th className="px-2 py-2">#</th>
+                  <th className="px-2 py-2">Cours</th>
+                  <th className="px-2 py-2">Ref</th>
+                  <th className="px-2 py-2">Lieu</th>
+                  <th className="px-2 py-2 text-center">
+                    <i className="fa-solid fa-user text-sm"></i>
+                  </th>
+                  <th className="px-2 py-2">Montant (Ar)</th>
+                  <th className="px-2 py-2">
+                    <i className="fa-solid fa-money-bill-transfer"></i>
+                  </th>
+                  <th className="px-2 py-2">Début - Fin</th>
+                  <th className="px-2 py-2 text-center">Détail</th>
+                </tr>
+              </thead>
+              {data.map((project,index)=>(
+              <tbody>
+                <tr className="border-t">
+                  <td className="px-2 py-1">{index+1}</td>
+                  <td className="px-2 py-1">{project.module_name}</td>
+                  <td className="px-2 py-1">{project.project_reference}</td>
+                  <td className="px-2 py-1">{project.ville}</td>
+                  <td className="px-2 py-1 text-center">{project.total_apprenant}</td>
+                  <td className="px-2 py-1">{project.total_ht}</td>
+                  <td className="px-2 py-1">
+                    {project.isPaid ? 
+                    <i class="fa-solid fa-circle-check text-green-500" title="Payé"></i>
+                    : 
+                  <i className="fa-solid fa-circle-question text-gray-500" title="Non facturé"></i>
+                    }
+                  </td>
+                  <td className="px-2 py-1">{project.date_debut} - {project.date_fin}</td>
+                  <td className="px-2 py-1 text-center">
+                    <a href="/cfp/projets/849/detail">
+                      <i className="fa-solid fa-eye opacity-50"></i>
+                    </a>
+                  </td>
+                </tr>
+                {/* Ajoute ici d'autres lignes si nécessaire */}
+              </tbody>
+              ))}
+            </table>
+          </div>
+  </>)
 }
 

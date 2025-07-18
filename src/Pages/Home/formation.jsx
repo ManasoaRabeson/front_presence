@@ -8,7 +8,7 @@ import { ProjectContext } from "../../Contexts/count-project";
 import { Spinner } from "../../Components/spinner";
 
 export function Formation(){
-    const [isFiltering, setIsFiltering] = useState(false);
+const [isFiltering, setIsFiltering] = useState(false);
 const { isOpen } = useFilter();
 const [data,setData] = useState(null);
 const {loading,callApi} = useApi();
