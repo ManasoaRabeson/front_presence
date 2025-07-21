@@ -6,19 +6,22 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/fr'; // Pour les mois en français
 dayjs.locale('fr');
 import { motion ,AnimatePresence} from "framer-motion";
+import useApi from "../../Hooks/Api";
 
 
 export function ResultSearch({data}) {
 
   const [openDrawer, setOpenDrawer] = useState(null);
    
-  const [idEntreprise,setIdEntreprise] = useState(null); 
+  //const [idEntreprise,setIdEntreprise] = useState(null); 
   const entrepriseRef = useRef(null);
   const apprenantRef = useRef(null);
   const formateurRef = useRef(null);
   const base_url = "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/entreprises";
+  const [entreprise, setEntreprise] = useState([]);
+  const [apprenant, setApprenant] = useState([]);
+   const { callApi } = useApi();
 
-  
   useEffect(() => {
     const handleClickOutside = (event) => {
       const refs = {
@@ -46,31 +49,54 @@ export function ResultSearch({data}) {
     };
   }, [openDrawer]);
 
-  // Regrouper les projets par mois et année
-  const groupes = data.reduce((acc, projet) => {
-    const cle = dayjs(projet.dateDebut).format('MMMM YYYY'); 
-    if (!acc[cle]) {
-      acc[cle] = [];
-    }
-    acc[cle].push(projet);
-    return acc;
-  }, {});
 
-  // Convertir en tableau trié par mois décroissant
-  const groupesTries = Object.entries(groupes).sort((a, b) => {
-    const dateA = dayjs(a[0], 'MMMM YYYY');
-    const dateB = dayjs(b[0], 'MMMM YYYY');
-    return dateB.diff(dateA); // Tri décroissant
-  });
+
+
+   // Regrouper les projets par mois et année
+const groupes = data.reduce((acc, projet) => {
+  const cle = dayjs(projet.dateDebut).format('YYYY-MM'); // format ISO fiable pour le tri
+  if (!acc[cle]) {
+    acc[cle] = [];
+  }
+  acc[cle].push(projet);
+  return acc;
+}, {});
+const groupesTries = Object.entries(groupes).sort((a, b) => {
+  return dayjs(b[0], 'YYYY-MM').diff(dayjs(a[0], 'YYYY-MM')); // décroissant
+});
 
   let compteur = 1;
 
 
-  const hanldeOpenDrawer = (role,idEtp) =>{
-    setIdEntreprise(idEtp);
-    setOpenDrawer(role);
-  }
 
+  // const hanldeOpenDrawer = (role,idEtp) =>{
+  //   setIdEntreprise(idEtp);
+  //   setOpenDrawer(role);
+  // };
+
+  const hanldeOpenDrawer = (role, id = null) => {
+    if(role ==="entreprise"){
+      openEntrepriseDrawer(id,role);
+    }
+    if(role ==="apprenant"){
+      setApprenant(id);
+      setOpenDrawer(role);
+    }
+
+};
+
+  const openEntrepriseDrawer = async (idEtp,role) => {
+  setEntreprise([]); // Clear les anciennes données
+  try {
+    const res = await callApi(`/cfp/etp-drawer/${idEtp}`);
+    setEntreprise(res);
+    setOpenDrawer(role);
+  } catch (error) {
+    console.error("Erreur chargement entreprise", error);
+  }
+};
+
+console.log(groupesTries);
   
   return (
 
@@ -102,7 +128,7 @@ export function ResultSearch({data}) {
       {/* Titre */}
       <ul className="w-full mb-4">
         <li className="text-2xl font-semibold p-4 bg-slate-100 rounded-xl text-slate-700 shadow-sm">
-          📅 {nombre[0]}
+          📅 {dayjs(nombre[0], 'YYYY-MM').format('MMMM YYYY')}
         </li>
       </ul>
 
@@ -177,7 +203,7 @@ export function ResultSearch({data}) {
                 </span>
               </td>
               <td className="px-4 py-3">
-                <div className="flex -space-x-3 rtl:space-x-reverse cursor-pointer" onClick={() => hanldeOpenDrawer("apprenant")}>
+                {/* <div className="flex -space-x-3 rtl:space-x-reverse cursor-pointer" onClick={() => hanldeOpenDrawer("apprenant",projet)}>
                   {["A", "L", "R"].map((letter, idx) => (
                     <div
                       key={idx}
@@ -191,7 +217,49 @@ export function ResultSearch({data}) {
                   </div>
 
 
+                </div> */}
+                <div
+                  className="flex -space-x-3 rtl:space-x-reverse cursor-pointer"
+                  onClick={() => hanldeOpenDrawer("apprenant", projet)}
+                >
+                  {/* {projet.apprs.slice(0, 3).map((apprenant, idx) => (
+                    <img
+                      key={idx}
+                     src={`https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/employes/${apprenant?.emp_photo}`}
+                     alt={apprenant.emp_name}
+                      className="w-8 h-8 rounded-full border-2 border-white shadow object-cover"
+                    />
+                  ))} */}
+                  {projet.apprs.slice(0, 3).map((apprenant, idx) => (
+                    <div key={apprenant.id || idx}>
+                      {apprenant.emp_photo ? (
+                        <img
+                         src={`https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/employes/${apprenant?.emp_photo}`}
+                          alt={apprenant.emp_name}
+                          onError={(e) => { e.target.onerror = null; e.target.src = ""; }}
+                          className="w-8 h-8 rounded-full border-2 border-white shadow-md object-cover bg-slate-100"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-slate-300 text-slate-700 rounded-full flex items-center justify-center text-sm font-semibold border-2 border-white shadow-md">
+                          {(apprenant.emp_name?.charAt(0) || '?').toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {projet.apprs.length > 3 && (
+                    <div className="w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center text-[13px] font-bold tracking-tight shadow-md border-2 border-white">
+                      +{projet.apprs.length - 3}
+                    </div>
+                  )}
+
+                  {projet.apprs.length > 3 && (
+                    <div className="w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center text-[13px] font-bold tracking-tight shadow-md border-2 border-white">
+                      +{projet.apprs.length - 3}
+                    </div>
+                  )}
                 </div>
+
               </td>
               <td className="px-4 py-3">
                 <div className="flex -space-x-2 opacity-60" onClick={() => hanldeOpenDrawer("formateur")}>
@@ -215,30 +283,25 @@ export function ResultSearch({data}) {
       </div>
     </motion.div>))}
     </AnimatePresence>
-    <EntrepriseDrawer
-      idEntreprise={idEntreprise}
+    {openDrawer === "entreprise" &&<EntrepriseDrawer
+      entreprise={entreprise}
       ref={entrepriseRef}
       isOpen={openDrawer === "entreprise"}
       onClose={() => setOpenDrawer(null)}
-    />
-
+    />}
+    {openDrawer === "apprenant" &&
     <ApprenantDrawer
       ref={apprenantRef}
       isOpen={openDrawer === "apprenant"}
       onClose={() => setOpenDrawer(null)}
-      module={{
-        title: "POWER BI FONDAMENTAUX",
-        description: "Les bases de Power BI",
-        image: "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/modules/1715348320.webp",
-        count: 0,
-      }}
-    />
-
+      module={apprenant}
+    />}
+    {openDrawer === "formateur" && 
     <FormateurDrawer
       ref={formateurRef}
       isOpen={openDrawer === "formateur"}
       onClose={() => setOpenDrawer(null)}
-    />
+    />}
 
 
   </>
