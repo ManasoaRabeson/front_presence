@@ -19,7 +19,7 @@ export function GenRoute() {
         <Route path="/" element={<WelcomeContent />} />
         <Route path="/login" element={<LoginHome />} />
         <Route path="/register" element={<FormafusionSignup />} />
-        <Route path="/non-autorise" element={<NonAutorise />} />
+        <Route path="/non-autorise" element={<NonAutorise />} />s
 
         {/* Route facture */}
         <Route path="/*" element={<HomeContent />}>

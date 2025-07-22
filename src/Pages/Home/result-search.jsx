@@ -7,6 +7,7 @@ import 'dayjs/locale/fr'; // Pour les mois en français
 dayjs.locale('fr');
 import { motion ,AnimatePresence} from "framer-motion";
 import useApi from "../../Hooks/Api";
+import PresenceSheet from "./Drawer/presence-drawer";
 
 
 export function ResultSearch({data}) {
@@ -19,6 +20,8 @@ export function ResultSearch({data}) {
   const formateurRef = useRef(null);
   const base_url = "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/entreprises";
   const [entreprise, setEntreprise] = useState([]);
+  const [formateur, setFormateur] = useState([]);
+  const [presence, setPresence] = useState([]);
   const [apprenant, setApprenant] = useState([]);
    const { callApi } = useApi();
 
@@ -67,12 +70,9 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
 
   let compteur = 1;
 
+  console.log(groupesTries);
 
 
-  // const hanldeOpenDrawer = (role,idEtp) =>{
-  //   setIdEntreprise(idEtp);
-  //   setOpenDrawer(role);
-  // };
 
   const hanldeOpenDrawer = (role, id = null) => {
     if(role ==="entreprise"){
@@ -81,6 +81,12 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
     if(role ==="apprenant"){
       setApprenant(id);
       setOpenDrawer(role);
+    }
+    if(role ==="presence"){
+      openPresenceDrawer(id,role);
+    }
+    if(role ==="formateur"){
+      openFormateurDrawer(id,role);
     }
 
 };
@@ -95,8 +101,27 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
     console.error("Erreur chargement entreprise", error);
   }
 };
+  const openFormateurDrawer = async (idFormateur,role) => {
+  setFormateur([]); // Clear les anciennes données
+  try {
+    const res = await callApi(`/employes/projets/${idFormateur}/mini-cv`);
+    setFormateur(res);
+    setOpenDrawer(role);
+  } catch (error) {
+    console.error("Erreur chargement entreprise", error);
+  }
+};
+  const openPresenceDrawer = async (idProjet,role) => {
+  setPresence([]); // Clear les anciennes données
+  try {
+    const res = await callApi(`/cfp/emargement/${idProjet}`);
+    setPresence(res);
+    setOpenDrawer(role);
+  } catch (error) {
+    console.error("Erreur chargement entreprise", error);
+  }
+};
 
-console.log(groupesTries);
   
   return (
 
@@ -262,16 +287,44 @@ console.log(groupesTries);
 
               </td>
               <td className="px-4 py-3">
-                <div className="flex -space-x-2 opacity-60" onClick={() => hanldeOpenDrawer("formateur")}>
-                  <img
-                    className="h-8 w-8 rounded-full ring-2 ring-white shadow cursor-pointer"
-                    src="https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/formateurs/6686b29f6595b.webp"
-                    alt="formateur"
-                  />
+                <div
+                  className="flex -space-x-3 rtl:space-x-reverse cursor-pointer"
+                >
+                  {projet.formateurs.slice(0, 3).map((formateurs, idx) => (
+                    <div key={formateurs.idFormateur || idx} onClick={() => hanldeOpenDrawer("formateur", formateurs.idFormateur)}>
+                      {formateurs.form_photo ? (
+                        <img
+                         src={`https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/formateurs/${formateurs?.form_photo}`}
+                          alt={formateurs.form_name}
+                          onError={(e) => { e.target.onerror = null; e.target.src = ""; }}
+                          className="w-8 h-8 rounded-full border-2 border-white shadow-md object-cover bg-slate-100"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 bg-slate-300 text-slate-700 rounded-full flex items-center justify-center text-sm font-semibold border-2 border-white shadow-md">
+                          {(formateurs.form_name?.charAt(0) || '?').toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* {projet.apprs.length > 3 && (
+                    <div className="w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center text-[13px] font-bold tracking-tight shadow-md border-2 border-white">
+                      +{projet.apprs.length - 3}
+                    </div>
+                  )}
+
+                  {projet.apprs.length > 3 && (
+                    <div className="w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center text-[13px] font-bold tracking-tight shadow-md border-2 border-white">
+                      +{projet.apprs.length - 3}
+                    </div>
+                  )} */}
                 </div>
+
               </td>
               <td className="px-4 py-3">
-                <button className=" font-bold px-4 py-1.5 text-sm border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-200 transition duration-200">
+                <button 
+                  onClick={()=>hanldeOpenDrawer("presence",projet.idProjet)}
+                  className=" font-bold px-4 py-1.5 text-sm border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-200 transition duration-200">
                   Présence
                 </button>
               </td>
@@ -298,10 +351,18 @@ console.log(groupesTries);
     />}
     {openDrawer === "formateur" && 
     <FormateurDrawer
+      data={formateur}
       ref={formateurRef}
       isOpen={openDrawer === "formateur"}
       onClose={() => setOpenDrawer(null)}
     />}
+    {openDrawer === "presence" && 
+    <PresenceSheet 
+      data={presence}
+      isOpen={openDrawer === "presence"}
+      onClose={() => setOpenDrawer(null)}
+    />
+    }
 
 
   </>
