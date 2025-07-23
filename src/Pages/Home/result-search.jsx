@@ -21,8 +21,11 @@ export function ResultSearch({data}) {
   const base_url = "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/entreprises";
   const [entreprise, setEntreprise] = useState([]);
   const [formateur, setFormateur] = useState([]);
-  const [presence, setPresence] = useState([]);
   const [apprenant, setApprenant] = useState([]);
+  const [id,setId] = useState({
+    idProjet : null,
+    idCfp_inter : null
+  });
    const { callApi } = useApi();
 
   useEffect(() => {
@@ -74,7 +77,7 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
 
 
 
-  const hanldeOpenDrawer = (role, id = null) => {
+  const hanldeOpenDrawer = (role, id = null,idCfp_inter = null) => {
     if(role ==="entreprise"){
       openEntrepriseDrawer(id,role);
     }
@@ -83,7 +86,12 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
       setOpenDrawer(role);
     }
     if(role ==="presence"){
-      openPresenceDrawer(id,role);
+      setId({
+        idProjet: id,
+        idCfp_inter: idCfp_inter
+      });
+      setOpenDrawer(role);
+      // openPresenceDrawer(id,role,idCfp_inter);
     }
     if(role ==="formateur"){
       openFormateurDrawer(id,role);
@@ -111,18 +119,33 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
     console.error("Erreur chargement entreprise", error);
   }
 };
-  const openPresenceDrawer = async (idProjet,role) => {
-  setPresence([]); // Clear les anciennes données
-  try {
-    const res = await callApi(`/cfp/emargement/${idProjet}`);
-    setPresence(res);
-    setOpenDrawer(role);
-  } catch (error) {
-    console.error("Erreur chargement entreprise", error);
-  }
-};
+// const openPresenceDrawer = async (idProjet, role, idCfp_inter) => {
+//   setPresence([]);
 
-  
+//   if (!idProjet) return;
+
+//   try {
+//     const url = idCfp_inter
+//       ? `/cfp/projet/apprenants/getApprAddedInter/${idProjet}`
+//       : `/cfp/projet/apprenants/getApprenantAdded/${idProjet}`;
+
+//     const [result, res] = await Promise.all([
+//       callApi(`/cfp/projets/${idProjet}/getDataPresence`),
+//       callApi(url)
+//     ]);
+
+//     if (!result) return;
+
+//     setSession(result.seances);
+//     setPresence(res);
+//     setOpenDrawer(role);
+
+//   } catch (error) {
+//     console.error("Erreur lors du chargement des données de présence", error);
+//     // alert("Impossible de charger les données. Veuillez réessayer.");
+//   }
+// };
+
   return (
 
   <>
@@ -323,7 +346,7 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
               </td>
               <td className="px-4 py-3">
                 <button 
-                  onClick={()=>hanldeOpenDrawer("presence",projet.idProjet)}
+                  onClick={()=>hanldeOpenDrawer("presence",projet.idProjet,projet.idCfp_inter)}
                   className=" font-bold px-4 py-1.5 text-sm border border-purple-500 text-purple-500 rounded-lg hover:bg-purple-200 transition duration-200">
                   Présence
                 </button>
@@ -358,7 +381,7 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
     />}
     {openDrawer === "presence" && 
     <PresenceSheet 
-      data={presence}
+      id={id}
       isOpen={openDrawer === "presence"}
       onClose={() => setOpenDrawer(null)}
     />
