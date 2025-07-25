@@ -19,13 +19,13 @@ export function ResultSearch({data}) {
   const apprenantRef = useRef(null);
   const formateurRef = useRef(null);
   const base_url = "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/entreprises";
-  const [entreprise, setEntreprise] = useState([]);
   const [formateur, setFormateur] = useState([]);
   const [apprenant, setApprenant] = useState([]);
   const [id,setId] = useState({
     idProjet : null,
     idCfp_inter : null
   });
+  const[idEtp,setIdEtp] = useState(null);
    const { callApi } = useApi();
 
   useEffect(() => {
@@ -59,27 +59,28 @@ export function ResultSearch({data}) {
 
 
    // Regrouper les projets par mois et année
-const groupes = data.reduce((acc, projet) => {
-  const cle = dayjs(projet.dateDebut).format('YYYY-MM'); // format ISO fiable pour le tri
-  if (!acc[cle]) {
-    acc[cle] = [];
-  }
-  acc[cle].push(projet);
-  return acc;
-}, {});
-const groupesTries = Object.entries(groupes).sort((a, b) => {
-  return dayjs(b[0], 'YYYY-MM').diff(dayjs(a[0], 'YYYY-MM')); // décroissant
-});
+  const groupes = data.reduce((acc, projet) => {
+    const cle = dayjs(projet.dateDebut).format('YYYY-MM'); // format ISO fiable pour le tri
+    if (!acc[cle]) {
+      acc[cle] = [];
+    }
+    acc[cle].push(projet);
+    return acc;
+  }, {});
+  const groupesTries = Object.entries(groupes).sort((a, b) => {
+    return dayjs(b[0], 'YYYY-MM').diff(dayjs(a[0], 'YYYY-MM')); // décroissant
+  });
 
   let compteur = 1;
 
-  console.log(groupesTries);
+ // console.log(groupesTries);
 
 
 
   const hanldeOpenDrawer = (role, id = null,idCfp_inter = null) => {
     if(role ==="entreprise"){
-      openEntrepriseDrawer(id,role);
+      setIdEtp(id);
+      setOpenDrawer(role);
     }
     if(role ==="apprenant"){
       setApprenant(id);
@@ -99,16 +100,7 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
 
 };
 
-  const openEntrepriseDrawer = async (idEtp,role) => {
-  setEntreprise([]); // Clear les anciennes données
-  try {
-    const res = await callApi(`/cfp/etp-drawer/${idEtp}`);
-    setEntreprise(res);
-    setOpenDrawer(role);
-  } catch (error) {
-    console.error("Erreur chargement entreprise", error);
-  }
-};
+
   const openFormateurDrawer = async (idFormateur,role) => {
   setFormateur([]); // Clear les anciennes données
   try {
@@ -119,32 +111,6 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
     console.error("Erreur chargement entreprise", error);
   }
 };
-// const openPresenceDrawer = async (idProjet, role, idCfp_inter) => {
-//   setPresence([]);
-
-//   if (!idProjet) return;
-
-//   try {
-//     const url = idCfp_inter
-//       ? `/cfp/projet/apprenants/getApprAddedInter/${idProjet}`
-//       : `/cfp/projet/apprenants/getApprenantAdded/${idProjet}`;
-
-//     const [result, res] = await Promise.all([
-//       callApi(`/cfp/projets/${idProjet}/getDataPresence`),
-//       callApi(url)
-//     ]);
-
-//     if (!result) return;
-
-//     setSession(result.seances);
-//     setPresence(res);
-//     setOpenDrawer(role);
-
-//   } catch (error) {
-//     console.error("Erreur lors du chargement des données de présence", error);
-//     // alert("Impossible de charger les données. Veuillez réessayer.");
-//   }
-// };
 
   return (
 
@@ -157,22 +123,19 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
   <AnimatePresence>
   {groupesTries.map((nombre,index)=>(
     // <div key={index} id="toggleFilter" className="w-full px-4 py-6 bg-white rounded-2xl shadow-md">
-<motion.div
-  key={index}
-  id="toggleFilter"
-  className="w-full px-4 py-6 bg-white rounded-2xl shadow-md"
-  initial={{ opacity: 0, y: 20 }}
-  animate={{ opacity: 1, y: 0 }}
-  exit={{ opacity: 0, y: 20 }}
-  transition={{
-    duration: 0.3,
-    ease: "easeOut",
-    delay: index * 0.05,
-  }}
+    <motion.div
+    key={index}
+    id="toggleFilter"
+    className="w-full px-4 py-6 bg-white rounded-2xl shadow-md"
+    initial={{ opacity: 0, y: 20 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 20 }}
+    transition={{
+      duration: 0.3,
+      ease: "easeOut",
+      delay: index * 0.05,
+    }}
 >
-
-
-
       {/* Titre */}
       <ul className="w-full mb-4">
         <li className="text-2xl font-semibold p-4 bg-slate-100 rounded-xl text-slate-700 shadow-sm">
@@ -360,7 +323,7 @@ const groupesTries = Object.entries(groupes).sort((a, b) => {
     </motion.div>))}
     </AnimatePresence>
     {openDrawer === "entreprise" &&<EntrepriseDrawer
-      entreprise={entreprise}
+      idEtp={idEtp}
       ref={entrepriseRef}
       isOpen={openDrawer === "entreprise"}
       onClose={() => setOpenDrawer(null)}

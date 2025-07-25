@@ -1,18 +1,37 @@
-import React, { useState } from "react";
-
 
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import useApi from '../../../Hooks/Api';
 
+const EntrepriseDrawer = (({  idEtp,isOpen, onClose }, ref) => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [entreprise, setEntreprise] = useState([]);
+  const { callApi } = useApi();
+  const endpoint = import.meta.env.VITE_ENDPOINT_IMG;
+  
+  useEffect(()=>{
+  if (!isOpen || !idEtp) return;  
+  const openEntrepriseDrawer = async (idEtp) => {
+  setIsLoading(true);
+  setEntreprise([]); // Clear les anciennes données
+  try {
+    const res = await callApi(`/cfp/etp-drawer/${idEtp}`);
+    setEntreprise(res);
+  } catch (error) {
+    console.error("Erreur chargement entreprise", error);
+  } finally {
+    setIsLoading(false); 
+  }
+  };
+  openEntrepriseDrawer(idEtp);
+  },[idEtp,isOpen]);
 
-const EntrepriseDrawer = (({ entreprise, isOpen, onClose }, ref) => {
-  const [showClientEdit, setShowClientEdit] = useState(false);
-
-  if (!entreprise || Object.keys(entreprise).length === 0) return null;
-console.log(entreprise);
+  if (!isOpen) return null;
+  console.log(entreprise);
   return (
     <>
       <AnimatePresence>
-        {isOpen && !showClientEdit && (
+        {isOpen && (
           <motion.div
             ref={ref}
             initial={{ x: '100%' }}
@@ -25,12 +44,6 @@ console.log(entreprise);
           >
             {/* Header */}
             <div className="absolute top-1 right-1 flex items-center gap-2">
-              {/* <button
-                onClick={handleEdit}
-                className="btn border border-slate-300 text-sm px-3 py-1 rounded-md text-slate-700 hover:bg-gray-100"
-              >
-                <i className="fa-solid fa-pen mr-1"></i>Changer l'entreprise
-              </button> */}
               <button
                 onClick={onClose}
                 className="w-10 h-10 rounded-md hover:bg-gray-200 flex items-center justify-center text-gray-500"
@@ -38,299 +51,205 @@ console.log(entreprise);
                 <i className="fa-solid fa-xmark"></i>
               </button>
             </div>
-
-            {/* Contenu */}
-            <div className="flex flex-col w-full mt-12">
-              {/* Profil Entreprise */}
-              <div className="w-full p-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-[116px] h-[77px] bg-white flex items-center justify-center p-1">
-                    <img
-                      className="object-cover w-full h-auto rounded-xl"
-                      src={entreprise.logo || "https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/entreprises/681a0e123a24f.webp"}
-                      alt="Logo"
-                    />
-                  </div>
-                  <div className="flex flex-col justify-start gap-y-2 w-full">
-                    <h3 className="text-2xl font-bold text-gray-700">{entreprise?.customer?.customerName}</h3>
-                    <p className="text-base text-gray-500">{entreprise?.customer?.siteWeb}</p>
-                  </div>
+  
+            {isLoading ? (
+              <div className="flex h-full w-full items-center justify-center bg-white/70">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 border-[6px] border-purple-300 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-gray-500 text-lg font-semibold tracking-wide">Chargement en cours...</p>
                 </div>
               </div>
+            ) : (
 
-              {/* Référent principal */}
-              <div className="w-full px-4">
-                <p className="text-xl font-semibold text-gray-900 mb-2">Référent principal</p>
-                <div className="flex items-center mb-4">
-                  <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-2xl">
-                    <i className="fa-solid fa-user"></i>
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-gray-900">
-                      <i className="fa-solid fa-user mr-1"></i>
-                      {entreprise?.referents[0]?.name || ''} {entreprise?.referents[0]?.firstName || ''} {entreprise?.referents[0]?.fonction || ''}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      <i className="fa-solid fa-envelope mr-1"></i>
-                      {entreprise?.referents[0]?.email || ''}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      <i className="fa-solid fa-phone mr-1"></i>
-                      {entreprise?.referents[0]?.phone || ''}
-                    </p>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.4 }}
+                className="flex flex-col w-full mt-12"
+              >
+                {/* Profil Entreprise */}
+                <div className="w-full p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-[116px] h-[77px] bg-white flex items-center justify-center p-1">
+                      {entreprise?.customer?.logo ? (
+                        <img
+                          className="object-cover w-full h-auto rounded-xl"
+                          src={`${endpoint}/img/entreprises/${entreprise?.customer?.logo}`}
+                          alt="Logo entreprise"
+                        />
+                      ) : (
+                        <img
+                          className="object-cover w-full h-auto rounded-xl"
+                          src={`no_img.svg`}
+                          alt="Logo entreprise"
+                        />
+                      )}
+
+                    </div>
+                    <div className="flex flex-col justify-start gap-y-2 w-full">
+                      <h3 className="text-2xl font-bold text-gray-700">{entreprise?.customer?.customerName}</h3>
+                      <p className="text-base text-gray-500">{entreprise?.customer?.siteWeb}</p>
+                    </div>
                   </div>
                 </div>
 
-                {/* Autres référents */}
-                <div className="mt-4">
-                  <p className="text-xl font-semibold text-gray-900 mb-2">Autres référents</p>
-                  {entreprise?.referents?.slice(1).map((referent, i) => (
-                    <li key={i} className="pt-3 pb-0 sm:pt-4">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
-                          {referent.photo ? (
-                            <img
-                              className="w-10 h-10 rounded-full"
-                              src={`https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/employes/${referent.photo}`}
-                              alt={referent.name || ''}
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-full text-gray-500 font-bold text-2xl text-center bg-gray-200 relative">
-                              <p className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                                {referent.name ? referent.name.charAt(0) : 'I'}
-                              </p>
-                            </div>
-                          )}
-                        </div>
+                {/* Référent principal */}
+                <div className="w-full px-4">
+                  <p className="text-xl font-semibold text-gray-900 mb-2">Référent principal</p>
+                  <div className="flex items-center mb-4">
+                    <div className="w-10 h-10 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-2xl">
+                      <i className="fa-solid fa-user"></i>
+                    </div>
+                    <div className="ml-4">
+                      <p className="text-sm font-medium text-gray-900">
+                        <i className="fa-solid fa-user mr-1"></i>
+                        {entreprise?.referents[0]?.name || ''} {entreprise?.referents[0]?.firstName || ''} {entreprise?.referents[0]?.fonction || ''}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        <i className="fa-solid fa-envelope mr-1"></i>
+                        {entreprise?.referents[0]?.email || ''}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        <i className="fa-solid fa-phone mr-1"></i>
+                        {entreprise?.referents[0]?.phone || ''}
+                      </p>
+                    </div>
+                  </div>
 
-                        <div className="flex-1 min-w-0 ms-4">
-                          <p className="text-sm font-medium text-gray-900 truncate">
-                            <i className="fa-solid fa-user text-sm mr-1" />
-                            {referent.name || ''} {referent.firstName || ''}{' '}
-                            {referent.fonction ? `(${referent.fonction})` : ''}
-                          </p>
-                          <p className="text-sm text-gray-500 truncate">
-                            <i className="fa-solid fa-envelope text-sm mr-1" />
-                            {referent.email || '--'}
-                          </p>
-                          <p className="text-sm text-gray-500 truncate">
-                            <i className="fa-solid fa-phone text-sm mr-1" />
-                            {referent.phone || '--'}
-                          </p>
+                  {/* Autres référents */}
+                  <div className="mt-4">
+                    <p className="text-xl font-semibold text-gray-900 mb-2">Autres référents</p>
+                    {entreprise?.referents?.slice(1).map((referent, i) => (
+                      <li key={i} className="pt-3 pb-0 sm:pt-4">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
+                            {referent.photo ? (
+                              <img
+                                className="w-10 h-10 rounded-full"
+                                src={`https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/employes/${referent.photo}`}
+                                alt={referent.name || ''}
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full text-gray-500 font-bold text-2xl text-center bg-gray-200 relative">
+                                <p className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                                  {referent.name ? referent.name.charAt(0) : 'I'}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0 ms-4">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              <i className="fa-solid fa-user text-sm mr-1" />
+                              {referent.name || ''} {referent.firstName || ''}{' '}
+                              {referent.fonction ? `(${referent.fonction})` : ''}
+                            </p>
+                            <p className="text-sm text-gray-500 truncate">
+                              <i className="fa-solid fa-envelope text-sm mr-1" />
+                              {referent.email || '--'}
+                            </p>
+                            <p className="text-sm text-gray-500 truncate">
+                              <i className="fa-solid fa-phone text-sm mr-1" />
+                              {referent.phone || '--'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  ))}
+                      </li>
+                    ))}
+                  </div>
+
+                  {/* Projets */}
+                  {entreprise.projects_future?.length !== 0 && (
+                    <TableProject data={entreprise.projects_future} etat="Planifié" />
+                  )}
+                  {entreprise.projects_in_preparation?.length !== 0 && (
+                    <TableProject data={entreprise.projects_in_preparation} etat="En préparation" />
+                  )}
+                  {entreprise.projects_in_progress?.length !== 0 && (
+                    <TableProject data={entreprise.projects_in_progress} etat="En cours" />
+                  )}
+                  {entreprise.projects_finished?.length !== 0 && (
+                    <TableProject data={entreprise.projects_finished} etat="Terminé" />
+                  )}
+                  {entreprise.projects_fenced?.length !== 0 && (
+                    <TableProject data={entreprise.projects_fenced} etat="Clôturé" />
+                  )}
                 </div>
-
-                {/* Projets */}
-                {entreprise.projects_future?.length !== 0 && (
-                  <TableProject data={entreprise.projects_future} etat="Planifié" />
-                )}
-                {entreprise.projects_in_preparation?.length !== 0 && (
-                  <TableProject data={entreprise.projects_in_preparation} etat="En préparation" />
-                )}
-                {entreprise.projects_in_progress?.length !== 0 && (
-                  <TableProject data={entreprise.projects_in_progress} etat="En cours" />
-                )}
-                {entreprise.projects_finished?.length !== 0 && (
-                  <TableProject data={entreprise.projects_finished} etat="Terminé" />
-                )}
-                {entreprise.projects_fenced?.length !== 0 && (
-                  <TableProject data={entreprise.projects_fenced} etat="Clôturé" />
-                )}
-              </div>
-            </div>
+              </motion.div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* {showClientEdit && <ClientEditDrawer onClose={() => setShowClientEdit(false)} />} */}
     </>
   );
 });
 
 export default EntrepriseDrawer ;
+function TableProject({ data, etat }) {
+  const colorClass = {
+    Clôturé: "bg-[#6F1926]",
+    "En cours": "bg-[#369ACC]",
+    "En préparation": "bg-[#F8E16F] text-gray-800",
+    Planifié: "bg-[#CBABD1]",
+    Terminé: "bg-[#95CF92]",
+  }[etat] || "bg-gray-400 text-white";
 
-
-
-// function ClientEditDrawer({ onClose }) {
-//   const [search, setSearch] = useState('');
-//   const [selected, setSelected] = useState(selectedEntreprise);
-
-//   const handleAssign = (etpId) => {
-//     const etp = entreprises.find((e) => e.id === etpId);
-//     if (etp) setSelected(etp);
-//   };
-
-//   const filtered = entreprises.filter((etp) =>
-//     etp.nom.toLowerCase().includes(search.toLowerCase())
-//   );
-
-//   return (
-//     <div className="fixed top-0 right-0 z-50 h-full w-[70em] bg-white shadow-xl overflow-y-auto transition-transform duration-300 translate-x-0">
-//       {/* Bouton fermer */}
-//       <div className="absolute top-4 right-4">
-//         <button
-//           onClick={onClose}
-//           className="w-10 h-10 rounded-full hover:bg-gray-200 text-gray-500 flex items-center justify-center"
-//         >
-//           <i className="fa-solid fa-arrow-left text-xl text-gray-600" />
-//         </button>
-//       </div>
-
-//       <div className="flex h-full p-6 mt-12">
-//         {/* Liste des clients */}
-//         <div className="flex flex-col w-1/2 pr-6 border-r border-gray-200">
-//           <div className="flex items-center gap-2 mb-4">
-//             <div className="w-1 h-6 bg-red-400"></div>
-//             <h2 className="text-2xl font-semibold text-slate-700">Entreprises disponibles</h2>
-//           </div>
-
-//           <div className="mb-4 relative">
-//             <input
-//               type="text"
-//               placeholder="Chercher une entreprise"
-//               value={search}
-//               onChange={(e) => setSearch(e.target.value)}
-//               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200"
-//             />
-//             <i className="fa fa-search absolute top-2.5 left-3 text-gray-400"></i>
-//           </div>
-
-//           <div className="space-y-3 overflow-y-auto pr-2">
-//             {filtered.map((etp) => (
-//               <div
-//                 key={etp.id}
-//                 className="flex items-center justify-between p-3 bg-white shadow-sm rounded-md hover:shadow-md transition"
-//               >
-//                 <div className="flex items-center gap-3">
-//                   <div className="w-20 h-14 rounded-md overflow-hidden bg-slate-100 flex items-center justify-center">
-//                     {etp.avatar ? (
-//                       <img
-//                         src={etp.avatar}
-//                         alt={etp.nom}
-//                         className="object-cover w-full h-full"
-//                       />
-//                     ) : (
-//                       <span className="text-xl font-bold text-slate-600">{etp.nom[0]}</span>
-//                     )}
-//                   </div>
-//                   <div>
-//                     <h3 className="font-bold uppercase text-slate-700">{etp.nom}</h3>
-//                     <p className="text-sm text-slate-500">{etp.email}</p>
-//                   </div>
-//                 </div>
-//                 <button
-//                   onClick={() => handleAssign(etp.id)}
-//                   className="px-3 py-1 border border-green-500 text-green-600 text-sm rounded-md hover:bg-green-100"
-//                 >
-//                   <i className="fa-solid fa-plus"></i>
-//                 </button>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-
-//         {/* Client sélectionné */}
-//         <div className="flex flex-col w-1/2 pl-6">
-//           <div className="flex items-center gap-2 mb-4">
-//             <div className="w-1 h-6 bg-green-400"></div>
-//             <h2 className="text-2xl font-semibold text-slate-700">Client sélectionné</h2>
-//           </div>
-
-//           <div className="p-4 bg-white rounded-md shadow-sm">
-//             <div className="flex items-center gap-4">
-//               <div className="w-24 h-16 rounded-md overflow-hidden bg-slate-100 flex items-center justify-center">
-//                 {selected.avatar ? (
-//                   <img
-//                     src={selected.avatar}
-//                     alt={selected.nom}
-//                     className="object-cover w-full h-full"
-//                   />
-//                 ) : (
-//                   <span className="text-xl font-bold text-slate-600">{selected.nom[0]}</span>
-//                 )}
-//               </div>
-//               <div>
-//                 <h3 className="font-bold uppercase text-slate-700 text-lg">{selected.nom}</h3>
-//                 <p className="text-sm text-slate-500">{selected.email}</p>
-//               </div>
-//             </div>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-function TableProject({data,etat }){
   return (
-  <>
-          <div className="mt-4">
-            <span className={`text-md rounded-xl py-1 px-3 text-white 
-                    ${
-                    etat === "Cloturé"
-                      ? " bg-[#6F1926]"
-                      :etat === "encours"
-                      ? "bg-[#369ACC]"
-                      :etat === "En préparation"
-                      ? " bg-[#F8E16F]"
-                      :etat === "Planifié"
-                      ? " bg-[#CBABD1]"
-                      : etat === "Terminé"
-                      ? "bg-[#95CF92]"
-                      : "bg-gray-400 text-gray-800"
-                  }`}> {etat} </span>
-          </div>
+    <>
+      <div className="mt-6">
+        <span className={`text-sm text-white font-medium inline-block rounded-full py-1 px-4 ${colorClass}`}>
+          {etat}
+        </span>
+      </div>
 
-          <div className="mt-1 overflow-x-auto">
-            <table className="min-w-full text-sm text-left">
-              <thead className="text-gray-700">
-                <tr>
-                  <th className="px-2 py-2">#</th>
-                  <th className="px-2 py-2">Cours</th>
-                  <th className="px-2 py-2">Ref</th>
-                  <th className="px-2 py-2">Lieu</th>
-                  <th className="px-2 py-2 text-center">
-                    <i className="fa-solid fa-user text-sm"></i>
-                  </th>
-                  <th className="px-2 py-2">Montant (Ar)</th>
-                  <th className="px-2 py-2">
-                    <i className="fa-solid fa-money-bill-transfer"></i>
-                  </th>
-                  <th className="px-2 py-2">Début - Fin</th>
-                  <th className="px-2 py-2 text-center">Détail</th>
-                </tr>
-              </thead>
-              {data.map((project,index)=>(
-              <tbody>
-                <tr className="border-t" key={index}>
-                  <td className="px-2 py-1">{index+1}</td>
-                  <td className="px-2 py-1">{project.module_name}</td>
-                  <td className="px-2 py-1">{project.project_reference}</td>
-                  <td className="px-2 py-1">{project.ville}</td>
-                  <td className="px-2 py-1 text-center">{project.total_apprenant}</td>
-                  <td className="px-2 py-1">{project.total_ht}</td>
-                  <td className="px-2 py-1">
-                    {project.isPaid ? 
-                    <i class="fa-solid fa-circle-check text-green-500" title="Payé"></i>
-                    : 
-                  <i className="fa-solid fa-circle-question text-gray-500" title="Non facturé"></i>
-                    }
-                  </td>
-                  <td className="px-2 py-1">{project.date_debut} - {project.date_fin}</td>
-                  <td className="px-2 py-1 text-center">
-                    <a href="/cfp/projets/849/detail">
-                      <i className="fa-solid fa-eye opacity-50"></i>
-                    </a>
-                  </td>
-                </tr>
-                {/* Ajoute ici d'autres lignes si nécessaire */}
-              </tbody>
-              ))}
-            </table>
-          </div>
-  </>)
+      <div className="mt-2 overflow-x-auto rounded-xl border border-gray-100 shadow-sm">
+        <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <thead className="bg-gray-50 text-gray-700">
+            <tr>
+              <th className="px-4 py-2">#</th>
+              <th className="px-4 py-2">Cours</th>
+              <th className="px-4 py-2">Ref</th>
+              <th className="px-4 py-2">Lieu</th>
+              <th className="px-4 py-2 text-center">
+                <i className="fa-solid fa-user"></i>
+              </th>
+              <th className="px-4 py-2">Montant (Ar)</th>
+              <th className="px-4 py-2">
+                <i className="fa-solid fa-money-bill-transfer"></i>
+              </th>
+              <th className="px-4 py-2">Début - Fin</th>
+              <th className="px-4 py-2 text-center">Détail</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 bg-white">
+            {data.map((project, index) => (
+              <tr key={index} className="hover:bg-gray-50">
+                <td className="px-4 py-2">{index + 1}</td>
+                <td className="px-4 py-2">{project.module_name}</td>
+                <td className="px-4 py-2">{project.project_reference}</td>
+                <td className="px-4 py-2">{project.ville}</td>
+                <td className="px-4 py-2 text-center">{project.total_apprenant}</td>
+                <td className="px-4 py-2">{project.total_ht}</td>
+                <td className="px-4 py-2 text-center">
+                  {project.isPaid ? (
+                    <i className="fa-solid fa-circle-check text-green-500" title="Payé"></i>
+                  ) : (
+                    <i className="fa-solid fa-circle-question text-gray-400" title="Non facturé"></i>
+                  )}
+                </td>
+                <td className="px-4 py-2 whitespace-nowrap">{project.date_debut} - {project.date_fin}</td>
+                <td className="px-4 py-2 text-center">
+                  <a href={`/cfp/projets/${project.id}/detail`}>
+                    <i className="fa-solid fa-eye text-gray-500 hover:text-indigo-600"></i>
+                  </a>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </>
+  );
 }
+
 

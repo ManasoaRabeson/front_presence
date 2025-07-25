@@ -27,6 +27,20 @@ export const HomeNavBar = React.memo(function NavBarAccueil() {
     const toggleView = () => {
         setIsListView(!isListView);
     };
+    const [showMessage, setShowMessage] = useState(false);
+    const betaRef = useRef(null);
+    useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (betaRef.current && !betaRef.current.contains(event.target)) {
+       setShowMessage(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+
     // useEffect(() => {
     //     const fetchData = async () => {
     //         try {
@@ -93,10 +107,51 @@ export const HomeNavBar = React.memo(function NavBarAccueil() {
                 <div className="w-full navbar mx-auto" >
                     {/* Menu mobile */}
                     <div className="inline-flex items-center gap-4">
-                        <a href="https://presence.forma-fusion.com/cfp/projets" className="flex items-center gap-2">
+                        {/* <a href="https://presence.forma-fusion.com/cfp/projets" className="flex items-center gap-2">
                         <img src="https://presence.forma-fusion.com/img/icones/Présence.png" className="mb-1 w-9"/>
-                        <h1 className="text-2xl font-semibold text-gray-700">Présence</h1>
-                        </a>
+                        <h1 className="text-2xl font-semibold text-gray-700">Présence</h1> */}
+                        
+                        <p className="flex items-center gap-2" ref={betaRef}> 
+                        <img
+                        src="https://presence.forma-fusion.com/img/icones/Présence.png"
+                        className="mb-1 w-9"
+                        alt="Icon"
+                        />
+                        <span className="relative inline-block text-2xl text-gray-700">
+                        Présence
+                        <span
+                            onClick={() => setShowMessage((prev) => !prev)}
+                            className="absolute -top-2 -right-8 text-xs px-2 py-0.5 bg-green-500 text-white rounded-full border border-white shadow-md cursor-pointer"
+                        >
+                            Beta
+                        </span>
+                        </span>
+                    </p>
+                    <AnimatePresence>
+                        {showMessage && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute top-full left-0 mt-2 w-72 bg-black text-sm text-gray-700 p-4 rounded shadow-lg border z-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
+                        >
+                            <p className="font-semibold mb-1">La plateforme est en BETA ouverte !</p>
+                            <p>
+                            💬 Nous travaillons activement pour l'améliorer.{" "}
+                            <a
+                                href="https://forma-fusion.com/contact"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-purple-600 underline cursor-pointer dark:text-purple-400"
+                            >
+                                Contactez-nous ici
+                            </a>.
+                            </p>
+                        </motion.div>
+                        )}
+                    </AnimatePresence>
+                        {/* </a> */}
                     </div>
 
                     {/*Milieu */}
@@ -288,26 +343,48 @@ export const HomeNavBar = React.memo(function NavBarAccueil() {
             </div>
             {/* Modal de déconnexion */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-200 bg-opacity-30">
-                    <div className="w-full max-w-md p-6 bg-white rounded-lg shadow-lg">
-                        <h3 className="mb-4 text-lg font-bold">Déconnexion</h3>
-                        <p className="mb-6">Voulez-vous vraiment vous déconnecter ?</p>
-                        <div className="flex justify-end">
-                            <button
-                                className="px-4 py-2 mr-3 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
-                                onClick={() => setShowModal(false)}
-                            >
-                                Non, annuler
-                            </button>
-                            <button
-                                className="px-4 py-2 text-sm font-medium text-white bg-purple-700 rounded-md hover:bg-purple-800"
-                                onClick={handleLogout}
-                            >
-                                Oui, je confirme
-                            </button>
-                        </div>
-                    </div>
+            <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
+                <div className="bg-white rounded-2xl shadow-xl p-6 w-[90%] max-w-md animate-fade-in">
+                {/* Icône + titre */}
+                <div className="flex items-center gap-3 mb-4">
+                    <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-[#87388C]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 11-10 10A10 10 0 0112 2z"
+                    />
+                    </svg>
+                    <h3 className="text-lg font-bold text-gray-800">Confirmation de déconnexion</h3>
                 </div>
+
+                <p className="text-gray-600 mb-6">
+                    Voulez-vous vraiment vous déconnecter ?
+                </p>
+
+                {/* Boutons */}
+                <div className="flex justify-end gap-3">
+                    <button
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100 transition"
+                    >
+                    Non, annuler
+                    </button>
+                    <button
+                    onClick={handleLogout}
+                    className="px-4 py-2 rounded-lg bg-[#87388C] text-white font-semibold hover:bg-[#732b77] transition"
+                    >
+                    Oui, je confirme
+                    </button>
+                </div>
+                </div>
+            </div>
             )}
         </>
     )

@@ -10,12 +10,16 @@ dayjs.locale('fr');
 const PresenceSheet = ({ id, isOpen, onClose }) => {
   const [selectedCheckboxes, setSelectedCheckboxes] = useState({});
   const [selectAll, setSelectAll] = useState(false);
-  const endpoint = 'https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/employes';
+  const endpoint = import.meta.env.VITE_ENDPOINT_IMG;
   const [session, setSession] = useState(null);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { callApi } = useApi();
+  const [presenceMap, setPresenceMap] = useState({});
+  const [reload,setReload] = useState(1);
+
+
 
   useEffect(() => {
     if (!isOpen || !id) return;
@@ -42,6 +46,14 @@ const PresenceSheet = ({ id, isOpen, onClose }) => {
 
         setSession(result.seances);
         setData(res);
+        setPresenceMap(() => {
+          const map = {};
+          res.getPresence?.forEach(v_gp => {
+            const key = `${v_gp.idSeance}_${v_gp.idEmploye}`;
+            map[key] = v_gp.isPresent;
+          });
+          return map;
+        });
       } catch (error) {
         console.error("Erreur lors du chargement des données de présence", error);
         setError("Impossible de charger les données. Veuillez réessayer.");
@@ -51,12 +63,26 @@ const PresenceSheet = ({ id, isOpen, onClose }) => {
     };
 
     openPresenceDrawer(id);
-  }, [isOpen, id]);
+  }, [isOpen, id,reload]);
 
-  const handleCheckboxChange = (dayId, apprenticeId) => {
-    const key = `${dayId}_${apprenticeId}`;
-    setSelectedCheckboxes(prev => ({ ...prev, [key]: !prev[key] }));
-  };
+
+const handleCheckboxChange = (dayId, apprenticeId) => {
+  const key = `${dayId}_${apprenticeId}`;
+  setSelectedCheckboxes(prev => {
+    const updated = { ...prev };
+    if (updated[key]) {
+      delete updated[key]; // ❌ on supprime si déjà coché
+    } else {
+      updated[key] = true; // ✅ on coche
+    }
+    return updated;
+  });
+};
+
+  // const handleCheckboxChange = (dayId, apprenticeId) => {
+  //   const key = `${dayId}_${apprenticeId}`;
+  //   setSelectedCheckboxes(prev => ({ ...prev, [key]: !prev[key] }));
+  // };
 
   const handleSelectAll = () => {
     const newSelected = {};
@@ -85,9 +111,48 @@ const PresenceSheet = ({ id, isOpen, onClose }) => {
     setSelectedCheckboxes(newSelected);
   };
 
-  const confirmChecking = (status, projectId) => {
-    console.log(`Status: ${status} for project ${projectId}`);
-  };
+
+const confirmChecking = async (status, projectId) => {
+  try {
+    const formatSelectedCheckboxes = () => {
+      return Object.entries(selectedCheckboxes)
+        .map(([key]) => {
+          const [dayId, apprenticeId] = key.split('_');
+          return {
+            idEmploye: parseInt(apprenticeId),
+            idSeance: parseInt(dayId),
+            isPresent: status,
+            idProjet: projectId
+          };
+        });
+    };
+
+    const dataToSend = formatSelectedCheckboxes();
+console.log(JSON.stringify(dataToSend));
+    if (dataToSend.length === 0) {
+      console.warn("Aucune case cochée !");
+      return;
+    }
+
+    const res = await callApi('/cfp/emargement', {
+      method: 'POST',
+      body: JSON.stringify(dataToSend)
+    });
+
+    console.log(res); // Debug de la réponse
+
+if (res?.success === 'Succès') {
+  setReload((v) => v + 1);
+  setSelectedCheckboxes({});
+}
+
+  } catch (error) {
+    console.error("Erreur lors de la validation :", error);
+  }
+};
+
+
+console.log(data);
 
   return (
     <AnimatePresence>
@@ -125,9 +190,9 @@ const PresenceSheet = ({ id, isOpen, onClose }) => {
                 {/* Légendes */}
                 <div className="flex flex-wrap justify-between gap-4">
                   <div className="flex gap-4 items-center">
-                    <div className="flex items-center gap-2 text-green-600 font-medium"><FaCheck /> Présent</div>
-                    <div className="flex items-center gap-2 text-yellow-500 font-medium"><FaExclamation /> Partiellement</div>
-                    <div className="flex items-center gap-2 text-red-400 font-medium"><FaTimes /> Absent</div>
+                    <div className="flex items-center gap-2 text-green-600 font-medium"><FaCheck /> Présent {data?.percentPresent}</div>
+                    <div className="flex items-center gap-2 text-yellow-500 font-medium"><FaExclamation /> Partiellement {data?.percentPartiel}</div>
+                    <div className="flex items-center gap-2 text-red-400 font-medium"><FaTimes /> Absent {data?.percentAbsent}</div>
                   </div>
                   <div className="flex flex-wrap items-center gap-4">
                     <span className="flex items-center gap-2 text-gray-400"><div className="w-4 h-4 bg-gray-400 rounded"></div> Non défini</span>
@@ -216,7 +281,7 @@ const PresenceSheet = ({ id, isOpen, onClose }) => {
                               <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden text-sm font-semibold uppercase text-gray-600">
                                 {apprentice.emp_photo ? (
                                   <img
-                                    src={`${endpoint}/${apprentice.emp_photo}`}
+                                    src={`${endpoint}/img/employes/${apprentice.emp_photo}`}
                                     alt=""
                                     className="object-cover w-full h-full"
                                   />
@@ -227,8 +292,21 @@ const PresenceSheet = ({ id, isOpen, onClose }) => {
                               {apprentice.emp_name} {apprentice.emp_firstname}
                             </td>
                             {data.countDate.map(day => {
+                              
                               const key = `${day.idSeance}_${apprentice.idEmploye}`;
+                             const rawStatus = presenceMap[key];
+                              const status = rawStatus === null || rawStatus === undefined ? 'undefined' : parseInt(rawStatus);
                               const isChecked = selectedCheckboxes[key] || false;
+                              const getStatusColor = (status) => {
+                                switch (status) {
+                                  case 3: return 'bg-green-500 border-green-600'; // Présent
+                                  case 2: return 'bg-yellow-400 border-yellow-500'; // Partiel
+                                  case 1: return 'bg-red-500 border-red-600'; // Absent
+                                  case 'undefined': return 'bg-gray-300 border-gray-400'; // Non défini (null)
+                                  default: return 'bg-gray-300 border-gray-400';
+                                }
+                              };
+
                               return (
                                 <td key={key} className="text-center p-3">
                                   <label className="flex items-center justify-center cursor-pointer">
@@ -236,10 +314,12 @@ const PresenceSheet = ({ id, isOpen, onClose }) => {
                                       type="checkbox"
                                       checked={isChecked}
                                       onChange={() => handleCheckboxChange(day.idSeance, apprentice.idEmploye)}
-                                      className="hidden"
+                                      
+                                      className={` hidden  `}
                                     />
+
                                     <div
-                                      className={`w-6 h-6 flex items-center justify-center rounded-md border transition-colors duration-200 ${
+                                      className={`w-6 h-6 flex items-center justify-center rounded-md border transition-colors duration-200  ${getStatusColor(status)} ${
                                         isChecked ? 'bg-green-500 border-green-600' : 'bg-gray-200 border-gray-300'
                                       }`}
                                     >
@@ -249,6 +329,7 @@ const PresenceSheet = ({ id, isOpen, onClose }) => {
                                 </td>
                               );
                             })}
+
                           </tr>
                         ))
                       )}

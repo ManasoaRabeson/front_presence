@@ -42,7 +42,7 @@ const FormateurDrawer = forwardRef(({ data, isOpen, onClose }, ref) => {
               >
                 <div className="w-32 h-32 rounded-full overflow-hidden">
                   <img
-                    src={`https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/formateurs/${data?.form.photo}`}
+                    src={`https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/formateurs/${data?.form?.photo}`}
                     alt="profil"
                     className="object-cover w-full h-full"
                   />
