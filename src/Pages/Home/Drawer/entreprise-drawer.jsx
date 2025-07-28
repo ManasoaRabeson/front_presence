@@ -210,7 +210,7 @@ function TableProject({ data, etat }) {
               <th className="px-4 py-2">Cours</th>
               <th className="px-4 py-2">Ref</th>
               <th className="px-4 py-2">Lieu</th>
-              <th className="px-4 py-2 text-center">
+              <th className="px-4 py-2 text-center">   
                 <i className="fa-solid fa-user"></i>
               </th>
               <th className="px-4 py-2">Montant (Ar)</th>

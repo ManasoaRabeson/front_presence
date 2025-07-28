@@ -243,7 +243,7 @@ console.log(data);
                     <thead className="bg-gray-50 border-b border-gray-200">
                       <tr>
                         <th className="p-3 text-left font-semibold">Apprenant</th>
-                        {data?.countDate?.map(day => (
+                        {data?.getSeance?.map(day => (
                           <th key={day.idSeance} className="p-3 text-center font-semibold">
                             <div>{dayjs(day.dateSeance).format("DD MMM YYYY")}</div>
                             <input
@@ -291,7 +291,7 @@ console.log(data);
                               </div>
                               {apprentice.emp_name} {apprentice.emp_firstname}
                             </td>
-                            {data.countDate.map(day => {
+                            {data.getSeance.map(day => {
                               
                               const key = `${day.idSeance}_${apprentice.idEmploye}`;
                              const rawStatus = presenceMap[key];

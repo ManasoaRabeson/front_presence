@@ -1,10 +1,31 @@
-import React, { forwardRef } from "react";
+import React, { forwardRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import dayjs from 'dayjs';
 import 'dayjs/locale/fr';
+import useApi from "../../../Hooks/Api";
 dayjs.locale('fr');
 
-const FormateurDrawer = forwardRef(({ data, isOpen, onClose }, ref) => {
+const FormateurDrawer = forwardRef(({ idFormateur, isOpen, onClose }, ref) => {
+  const endpoint = import.meta.env.VITE_ENDPOINT_IMG;
+  const [data, setData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const {callApi} = useApi()
+  useEffect(()=>{
+  const openFormateurDrawer = async (idFormateur) => {
+  setIsLoading(true);
+  setData([]); // Clear les anciennes données
+  try {
+    const res = await callApi(`/employes/projets/${idFormateur}/mini-cv`);
+    setData(res);
+  } catch (error) {
+    console.error("Erreur chargement entreprise", error);
+  }finally{
+    setIsLoading(false);
+  };
+};
+
+openFormateurDrawer(idFormateur);
+  },[idFormateur])
   return (
     <AnimatePresence>
       {isOpen && (
@@ -30,8 +51,16 @@ const FormateurDrawer = forwardRef(({ data, isOpen, onClose }, ref) => {
                 <i className="fa-solid fa-xmark text-gray-500"></i>
               </button>
             </div>
+            {isLoading ? (
+              <div className="flex h-full w-full items-center justify-center bg-white/70">
+                <div className="flex flex-col items-center gap-4">
+                  <div className="w-16 h-16 border-[6px] border-purple-300 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-gray-500 text-lg font-semibold tracking-wide">Chargement en cours...</p>
+                </div>
+              </div>
+            ) : (
 
-            {/* Content */}
+            
             <div className="p-4 space-y-6">
               {/* Profil */}
               <motion.div
@@ -42,7 +71,7 @@ const FormateurDrawer = forwardRef(({ data, isOpen, onClose }, ref) => {
               >
                 <div className="w-32 h-32 rounded-full overflow-hidden">
                   <img
-                    src={`https://formafusionmg.ams3.cdn.digitaloceanspaces.com/formafusionmg/img/formateurs/${data?.form?.photo}`}
+                    src={`${endpoint}/img/formateurs/${data?.form?.photo}`}
                     alt="profil"
                     className="object-cover w-full h-full"
                   />
@@ -51,7 +80,7 @@ const FormateurDrawer = forwardRef(({ data, isOpen, onClose }, ref) => {
                   <h3 className="text-2xl font-bold text-gray-700">
                     {data.form.name} {data.form.firstName}
                   </h3>
-                  <p className="text-base text-gray-500">{data.speciality.form_titre}</p>
+                  <p className="text-base text-gray-500">{data.speciality?.form_titre}</p>
                 </div>
               </motion.div>
 
@@ -64,11 +93,11 @@ const FormateurDrawer = forwardRef(({ data, isOpen, onClose }, ref) => {
               >
                 <div className="flex justify-between">
                   <h5 className="text-lg font-semibold text-gray-600">Email :</h5>
-                  <p className="text-base text-gray-400">{data.form.email}</p>
+                  <p className="text-base text-gray-400">{data.form?.email}</p>
                 </div>
                 <div className="flex justify-between">
                   <h5 className="text-lg font-semibold text-gray-600">Téléphone :</h5>
-                  <p className="text-base text-gray-400">{data.form.phone}</p>
+                  <p className="text-base text-gray-400">{data.form?.phone}</p>
                 </div>
               </motion.div>
 
@@ -83,10 +112,10 @@ const FormateurDrawer = forwardRef(({ data, isOpen, onClose }, ref) => {
                 <div>
                   <h5 className="text-lg font-semibold text-gray-600">Expériences</h5>
                   <ul className="space-y-2">
-                    {data?.experiences.length === 0 ? (
+                    {data.experiences?.length === 0 ? (
                       <li className="flex justify-between text-gray-400">Aucune expérience</li>
                     ) : (
-                      data?.experiences.map((exp, idx) => (
+                      data.experiences?.map((exp, idx) => (
                         <li key={idx} className="flex justify-between text-gray-400">
                           <div className="flex gap-2">
                             <span>{exp.Fonction}</span>
@@ -184,6 +213,8 @@ const FormateurDrawer = forwardRef(({ data, isOpen, onClose }, ref) => {
                 </div>
               </motion.div>
             </div>
+            )}
+            
           </div>
         </motion.div>
       )}
