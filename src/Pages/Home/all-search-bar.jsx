@@ -1,7 +1,9 @@
+
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-
-export function AllSearchBar() {
-
+import { motion, AnimatePresence } from "framer-motion";
+export function AllSearchBar({selected,setSelected,filtreData}) {
+const[isAdvancedFiltersOpen,setIsAdvancedFiltersOpen] = useState(false);
 const [data, setData] = useState([
   { id: "null", label: "Aucun", count: 1 },
   { id: "100", label: "2ADH", count: 1 },
@@ -18,13 +20,6 @@ const [cours, setCours] = useState([
   { id: "c5", label: "Anglais", count: 3 },
 ]);
 
-const [ville, setVille] = useState([
-  { id: "v1", label: "Antananarivo", count: 8 },
-  { id: "v2", label: "Toamasina", count: 4 },
-  { id: "v3", label: "Fianarantsoa", count: 3 },
-  { id: "v4", label: "Mahajanga", count: 2 },
-  { id: "v5", label: "Toliara", count: 1 },
-]);
 
 const [formateur, setFormateur] = useState([
   { id: "f1", label: "M. Rakoto", count: 3 },
@@ -43,17 +38,7 @@ const [mois, setMois] = useState([
 ]);
 
 
-const defaultSelected = {
-  etp: [],
-  cours: [],
-  ville: [],
-  formateur: [],
-  mois: [],
-  typeProjet: [],
-  periode: null,
-};
 
-const [selected, setSelected] = useState(defaultSelected);
 
   const handleUpdateSelected = (name, values) => {
     setSelected((prev) => ({
@@ -62,82 +47,155 @@ const [selected, setSelected] = useState(defaultSelected);
     }));
   };
   
-//Reset filtre 
-const resetFiltre = () => {
-  setSelected(defaultSelected); // Pas de champ manquant !
-};
+console.log(filtreData);
+const lieuxFormates = filtreData?.lieux.map((lieu) => ({
+  id: lieu,
+  label: lieu,
 
-
+}));
+const TypeProjetsFormates = filtreData?.type_projets.map((projet) => ({
+  id: projet.type,
+  label: projet.type,
+}));
+console.log(TypeProjetsFormates);
 
   return (
-    <section className="mb-4">
-      <div className="flex flex-col gap-4">
-                  <span class="inline-flex items-center justify-between w-full">
-            <h3 class="text-2xl font-semibold text-gray-700 count_card_filter"></h3>
+<section className="">
+  <div className="flex items-center flex-wrap gap-4">
+    {/* Bouton filtres */}
+    <button
+      onClick={() => setIsAdvancedFiltersOpen(!isAdvancedFiltersOpen)}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+        isAdvancedFiltersOpen
+          ? "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-200"
+          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+      }`}
+    >
+      <i className="fa-solid fa-filter text-lg"></i>
+      <span>Filtres</span>
+      {isAdvancedFiltersOpen ? (
+        <ChevronUpIcon className="w-4 h-4" />
+      ) : (
+        <ChevronDownIcon className="w-4 h-4" />
+      )}
+    </button>
 
-            <button onClick={resetFiltre}  class="inline-flex items-center gap-2 text-purple-500">
-                <i class="fa-solid fa-rotate-right"></i>
-                Réinitialiser le filtre
+    {/* Tags des filtres actifs */}
+    <div className="flex flex-wrap gap-2">
+      {Object.entries(selected).map(([key, value]) => {
+        // Couleurs personnalisées par clé
+        const colorMap = {
+          Entreprise: "bg-purple-600",
+          Projet: "bg-blue-600",
+          Periode: "bg-green-600",
+          Cours: "bg-yellow-600",
+          Ville: "bg-red-600",
+          Formateur: "bg-indigo-600",
+          Mois: "bg-pink-600",
+        };
+
+        const bgColor = colorMap[key] || "bg-gray-600";
+
+        if (Array.isArray(value) && value.length > 0) {
+          const label = `${value.length} ${key}`;
+          return (
+            <button
+              key={key}
+              className={`flex items-center gap-2 ${bgColor} text-white px-3 py-1 rounded-full text-sm`}
+              onClick={() =>
+                setSelected((prev) => ({ ...prev, [key]: [] }))
+              }
+            >
+              <span className="capitalize">{label}</span>
+              <i className="fas fa-times text-xs"></i>
             </button>
-          </span>
-        <div className="grid gap-4 my-2 2xl:grid-cols-5 md:grid-cols-4">
+          );
+        }
 
+        if (!Array.isArray(value) && value !== null) {
+          const label = `1 ${key}`;
+          return (
+            <button
+              key={key}
+              className={`flex items-center gap-2 ${bgColor} text-white px-3 py-1 rounded-full text-sm`}
+              onClick={() =>
+                setSelected((prev) => ({ ...prev, [key]: null }))
+              }
+            >
+              <span className="capitalize">{label}</span>
+              <i className="fas fa-times text-xs"></i>
+            </button>
+          );
+        }
+
+        return null;
+      })}
+    </div>
+  </div>
+
+  {/* Filtres avancés */}
+  <AnimatePresence>
+    {isAdvancedFiltersOpen && (
+      <motion.div
+        initial={{ opacity: 0, height: 0 }}
+        animate={{ opacity: 1, height: "auto" }}
+        exit={{ opacity: 0, height: 0 }}
+        transition={{ duration: 0.2 }}
+        className={`grid gap-4 my-2 2xl:grid-cols-5 md:grid-cols-4`}
+      >
         <SearchBar
-          name="etp"
+          name="Entreprise"
           role="Entreprise"
           data={data}
-          selected={selected.etp}
+          selected={selected.Entreprise}
           onChange={handleUpdateSelected}
         />
-          <TypeProjet 
-          name="projet"
+        <TypeProjet
+          name="Projet"
           onChange={handleUpdateSelected}
-          selected={selected.projet}
-          />
-
-          <PeriodeFormation
-            name="periode"
-            selected={selected.periode}
-            onChange={(name, value) =>
-              setSelected((prev) => ({ ...prev, [name]: value }))
-            }
-          />
-
+          selected={selected.Projet}
+          types={TypeProjetsFormates}
+        />
+        <PeriodeFormation
+          name="Periode"
+          selected={selected.Periode}
+          onChange={(name, value) =>
+            setSelected((prev) => ({ ...prev, [name]: value }))
+          }
+        />
         <SearchBar
-          name="cours"
+          name="Cours"
           role="Cours"
           data={cours}
-          selected={selected.cours}
+          selected={selected.Cours}
           onChange={handleUpdateSelected}
         />
         <SearchBar
-          name="ville"
+          name="Ville"
           role="Ville"
-          data={ville}
-          selected={selected.ville}
+          data={lieuxFormates}
+          selected={selected.Ville}
           onChange={handleUpdateSelected}
         />
         <SearchBar
-          name="formateur"
+          name="Formateur"
           role="Formateur"
           data={formateur}
-          selected={selected.formateur}
+          selected={selected.Formateur}
           onChange={handleUpdateSelected}
         />
         <SearchBar
-          name="mois"
+          name="Mois"
           role="Mois"
           data={mois}
-          selected={selected.mois}
+          selected={selected.Mois}
           onChange={handleUpdateSelected}
         />
+      </motion.div>
+    )}
+  </AnimatePresence>
+</section>
 
-
-        </div>
-      </div>
-
-
-    </section>
   );
 }
 
@@ -317,6 +375,7 @@ function SearchBar({ name, role, data, selected, onChange }) {
             }`}
           ></i>
         </button>
+        
 
         {isOpen && (
           <div className="absolute mt-2 w-full z-20 p-4 bg-white rounded-lg shadow-lg border border-gray-200 animate-dropdown">
@@ -397,7 +456,7 @@ function SearchBar({ name, role, data, selected, onChange }) {
   );
 }
 
- function TypeProjet({ name, selected, onChange }) {
+ function TypeProjet({ name, selected, onChange,types }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -414,10 +473,6 @@ function SearchBar({ name, role, data, selected, onChange }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const types = [
-    { id: "Inter", label: "Inter", count: 52 },
-    { id: "Intra", label: "Intra", count: 203 },
-  ];
 
   const handleCheckboxChange = (id) => {
     const updated = Array.isArray(selected) && selected.includes(id)
@@ -460,7 +515,7 @@ function SearchBar({ name, role, data, selected, onChange }) {
                     />
                     <span className="text-gray-600">{item.label}</span>
                   </div>
-                  <span className="text-gray-400 text-sm">{item.count}</span>
+                  {/* <span className="text-gray-400 text-sm">{item?.count}</span> */}
                 </label>
               </li>
             ))}
@@ -603,4 +658,162 @@ function SearchBar({ name, role, data, selected, onChange }) {
 }
 
 
+{/* Filtres avancés (desktop) */}
+          // <AnimatePresence>
+          //   {isAdvancedFiltersOpen && (
+          //     <motion.div
+          //       initial={{ opacity: 0, height: 0 }}
+          //       animate={{ opacity: 1, height: "auto" }}
+          //       exit={{ opacity: 0, height: 0 }}
+          //       transition={{ duration: 0.2 }}
+          //       className={`mb-6 p-4 rounded-lg ${
+          //         theme === "dark"
+          //           ? "bg-gray-700"
+          //           : "bg-gray-50"
+          //       }`}
+          //     >
+          //       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          //         {/* Filtre année */}
+          //         <div>
+          //           <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+          //             Année
+          //           </label>
+          //           <select
+          //             value={selectedYear || ""}
+          //             onChange={(e) => setSelectedYear(e.target.value ? parseInt(e.target.value) : null)}
+          //             className={`w-full px-4 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-500 transition ${
+          //               theme === "dark"
+          //                 ? "bg-gray-600 border-gray-500 text-white"
+          //                 : "bg-white border-gray-300 text-gray-800"
+          //             }`}
+          //           >
+          //             <option value="">Toutes les années</option>
+          //             {years.map((year) => (
+          //               <option key={year} value={year}>
+          //                 {year}
+          //               </option>
+          //             ))}
+          //           </select>
+          //         </div>
 
+          //         {/* Filtre mois */}
+          //         <div>
+          //           <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+          //             Mois
+          //           </label>
+          //           <select
+          //             value={activeMonth !== null ? activeMonth : ""}
+          //             onChange={(e) => setActiveMonth(e.target.value !== "" ? parseInt(e.target.value) : null)}
+          //             className={`w-full px-4 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-500 transition ${
+          //               theme === "dark"
+          //                 ? "bg-gray-600 border-gray-500 text-white"
+          //                 : "bg-white border-gray-300 text-gray-800"
+          //             }`}
+          //           >
+          //             <option value="">Tous les mois</option>
+          //             {months.map((month) => (
+          //               <option key={month.value} value={month.value}>
+          //                 {month.label}
+          //               </option>
+          //             ))}
+          //           </select>
+          //         </div>
+
+          //         {/* Filtre statut */}
+          //         <div>
+          //           <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+          //             Statut
+          //           </label>
+          //           <select
+          //             value={status}
+          //             onChange={(e) => setStatus(e.target.value)}
+          //             className={`w-full px-4 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-500 transition ${
+          //               theme === "dark"
+          //                 ? "bg-gray-600 border-gray-500 text-white"
+          //                 : "bg-white border-gray-300 text-gray-800"
+          //             }`}
+          //           >
+          //             <option value="all">Tous les statuts</option>
+          //             {Object.values(statusLabels).map((label) => (
+          //               <option key={label} value={label}>
+          //                 {label}
+          //               </option>
+          //             ))}
+          //           </select>
+          //         </div>
+
+          //         {/* Filtre type */}
+          //         <div>
+          //           <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+          //             Type
+          //           </label>
+          //           <select
+          //             value={type}
+          //             onChange={(e) => setType(e.target.value)}
+          //             className={`w-full px-4 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-500 transition ${
+          //               theme === "dark"
+          //                 ? "bg-gray-600 border-gray-500 text-white"
+          //                 : "bg-white border-gray-300 text-gray-800"
+          //             }`}
+          //           >
+          //             <option value="all">Tous les types</option>
+          //             <option value="Inter">Inter</option>
+          //             <option value="Intra">Intra</option>
+          //           </select>
+          //         </div>
+
+          //         {/* Filtre ville */}
+          //         <div>
+          //           <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+          //             Ville
+          //           </label>
+          //           <select
+          //             value={villeFilter}
+          //             onChange={(e) => setVilleFilter(e.target.value)}
+          //             className={`w-full px-4 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-500 transition ${
+          //               theme === "dark"
+          //                 ? "bg-gray-600 border-gray-500 text-white"
+          //                 : "bg-white border-gray-300 text-gray-800"
+          //             }`}
+          //           >
+          //             <option value="all">Toutes les villes</option>
+          //             {getUniqueOptions("villes").map(
+          //               (ville) =>
+          //                 ville !== "all" && (
+          //                   <option key={ville} value={ville}>
+          //                     {ville}
+          //                   </option>
+          //                 )
+          //             )}
+          //           </select>
+          //         </div>
+
+          //         {/* Filtre entreprise */}
+          //         <div>
+          //           <label className={`block text-sm font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+          //             Entreprise
+          //           </label>
+          //           <select
+          //             value={entrepriseFilter}
+          //             onChange={(e) => setEntrepriseFilter(e.target.value)}
+          //             className={`w-full px-4 py-2 text-sm rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-500 transition ${
+          //               theme === "dark"
+          //                 ? "bg-gray-600 border-gray-500 text-white"
+          //                 : "bg-white border-gray-300 text-gray-800"
+          //             }`}
+          //           >
+          //             <option value="all">Toutes les entreprises</option>
+          //             {getUniqueOptions("entreprises").map(
+          //               (entreprise) =>
+          //                 entreprise !== "all" && (
+          //                   <option key={entreprise} value={entreprise}>
+          //                     {entreprise}
+          //                   </option>
+          //                 )
+          //             )}
+          //           </select>
+          //         </div>
+          //       </div>
+          //     </motion.div>
+          //   )}
+          // </AnimatePresence>

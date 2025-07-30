@@ -7,7 +7,7 @@ import { AppLauncher } from "../../Components/app-launcher";
 import { AnimatePresence, motion } from "framer-motion";
 import { useFilter } from "../../Contexts/filter";
 import { ProjectContext } from "../../Contexts/count-project";
-//import useApi from "../../Hooks/Api";
+import useApi from "../../Hooks/Api";
 export const HomeNavBar = React.memo(function NavBarAccueil() {
     const { countProject,selected, setSelected } = useContext(ProjectContext);
     const {  toggleModal } = useFilter();
@@ -15,15 +15,16 @@ export const HomeNavBar = React.memo(function NavBarAccueil() {
     const user = JSON.parse(sessionStorage.getItem("user"));
     const [showModal, setShowModal] = useState(false);
     const [showAppLauncher, setShowAppLauncher] = useState(false);
-    //const [data, setData] = useState([]);
     const appLauncherRef = useRef(null);
     const [open, setOpen] = useState(false);
     const [openLangue, setOpenLangue] = useState(false);
     const dropdownRef = useRef(null);
     const dropdownRefLangue = useRef(null);
-    //const {callApi} = useApi();
+    const {callApi} = useApi();
     const [isListView, setIsListView] = useState(true);
-    const [_,transition] = useTransition()
+    const [_,transition] = useTransition();
+    const [data,setData] = useState();
+
     const toggleView = () => {
         setIsListView(!isListView);
     };
@@ -41,18 +42,19 @@ export const HomeNavBar = React.memo(function NavBarAccueil() {
   }, []);
 
 
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         try {
-    //             const response = callApi(`/cfp/profils/${JSON.parse(sessionStorage.getItem("user")).id}/index`
-    //             );
-    //             setData(response);
-    //         } catch (error) {
-    //             console.log(error);
-    //         }
-    //     };
-    //     fetchData();
-    // }, [callApi]);
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await callApi(`/countProject`
+                );
+                setData(response);
+            } catch (error) {
+                console.log(error);
+            }
+        };
+        fetchData();
+    }, [callApi]);
+   
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (appLauncherRef.current && !appLauncherRef.current.contains(event.target)) {
@@ -159,14 +161,14 @@ export const HomeNavBar = React.memo(function NavBarAccueil() {
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-4">
                         {/* En cours */}
                         <button
-                            onClick={() => changeTab("En_cours")}
+                            onClick={() => changeTab("En cours")}
                             className={`relative flex items-center justify-between w-44 px-4 py-2 border rounded-lg shadow-sm transition-all font-medium text-sm
-                            ${selected === "En_cours" ? "bg-[#369ACC] text-white" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"}`}
+                            ${selected === "En cours" ? "bg-[#369ACC] text-white" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"}`}
                         >
                             <span>En cours</span>
                             <span className={`text-xs font-semibold h-[1.3rem] min-w-[1.3rem] px-2 rounded-full flex items-center justify-center shadow
-                            ${selected === "En_cours" ? "bg-white text-black" : "bg-[#369ACC] text-white"}`}>
-                            {countProject?.en_cours}
+                            ${selected === "En cours" ? "bg-white text-black" : "bg-[#369ACC] text-white"}`}>
+                            {data?.projet_counts?.en_cours}
                             </span>
                         </button>
 
@@ -179,20 +181,20 @@ export const HomeNavBar = React.memo(function NavBarAccueil() {
                             <span>Terminé</span>
                             <span className={`text-xs font-semibold h-[1.3rem] min-w-[1.3rem] px-2 rounded-full flex items-center justify-center shadow
                             ${selected === "Terminé" ? "bg-white text-black" : "bg-[#95CF92] text-white"}`}>
-                            {countProject?.termines}
+                            {data?.projet_counts?.termines}
                             </span>
                         </button>
 
                         {/* Clôturé */}
                         <button
-                            onClick={() => changeTab("cloture")}
+                            onClick={() => changeTab("Cloturé")}
                             className={`relative flex items-center justify-between w-44 px-4 py-2 border rounded-lg shadow-sm transition-all font-medium text-sm
-                            ${selected === "cloture" ? "bg-[#6F1926] text-white" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"}`}
+                            ${selected === "Cloturé" ? "bg-[#6F1926] text-white" : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"}`}
                         >
                             <span>Clôturé</span>
                             <span className={`text-xs font-semibold h-[1.3rem] min-w-[1.3rem] px-2 rounded-full flex items-center justify-center shadow
-                            ${selected === "cloture" ? "bg-white text-black" : "bg-[#6F1926] text-white"}`}>
-                            {countProject?.clotures}
+                            ${selected === "Cloturé" ? "bg-white text-black" : "bg-[#6F1926] text-white"}`}>
+                            {data?.projet_counts?.clotures}
                             </span>
                         </button>
                     </div>

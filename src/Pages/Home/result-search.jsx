@@ -55,7 +55,7 @@ export function ResultSearch({data}) {
 
 
    // Regrouper les projets par mois et année
-  const groupes = data.reduce((acc, projet) => {
+  const groupes = data?.reduce((acc, projet) => {
     const cle = dayjs(projet.dateDebut).format('YYYY-MM'); // format ISO fiable pour le tri
     if (!acc[cle]) {
       acc[cle] = [];
