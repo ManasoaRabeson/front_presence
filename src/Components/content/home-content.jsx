@@ -5,7 +5,7 @@ import { ProjectProvider } from "../../Contexts/count-project";
 export function HomeContent() {
   return (
     <ProjectProvider>
-    <div className="flex flex-col min-h-screen bg-white">
+    <div className="flex flex-col min-h-screen">
       <HomeNavBar />
       <div className="flex-grow pt-20 px-4">
         <Outlet />

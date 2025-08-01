@@ -96,7 +96,6 @@ export function ResultSearch({data}) {
     }
 
 };
-console.log(groupesTries);
 
   return (
 

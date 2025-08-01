@@ -105,8 +105,8 @@ export const HomeNavBar = React.memo(function NavBarAccueil() {
     return (
         <>
             {/* Navbar principale */}
-            <div className="bg-base-100 shadow-sm px-4">
-                <div className="w-full navbar mx-auto" >
+            <div className="bg-base-100 shadow-sm px-4 fixed top-0 left-0 right-0 z-50 bg-white">
+                <div className="w-full navbar mx-auto " >
                     {/* Menu mobile */}
                     <div className="inline-flex items-center gap-4">
                         {/* <a href="https://presence.forma-fusion.com/cfp/projets" className="flex items-center gap-2">
@@ -392,17 +392,3 @@ export const HomeNavBar = React.memo(function NavBarAccueil() {
     )
 });
 
-// function UserInfo({ user }) {
-//     const strLimit = (str, limit) => str?.length > limit ? str.slice(0, limit) + '...' : str;
-  
-//     return (
-//         <div>
-//             <h1 className="text-lg font-medium text-gray-700">
-//                 {strLimit(user.name || '', 20)} {strLimit(user.firstName || '', 20)}
-//             </h1>
-//             <span className="text-base text-gray-500">
-//                 {strLimit(user.email || '', 30)}
-//             </span>
-//         </div>
-//     );
-// }
