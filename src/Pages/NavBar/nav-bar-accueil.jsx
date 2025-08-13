@@ -1,14 +1,15 @@
 
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AppLauncher } from "../../Components/app-launcher";
 import React from "react";
+import AppLauncher from "../../Components/AppLauncherGrid";
 
 
 export const NavBarAccueil = React.memo(function NavBarAccueil() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [isAppLauncherOpen, setIsAppLauncherOpen] = useState(false);
-
+    const [showMessage, setShowMessage] = useState(false);
+    const betaRef = useRef(null);
     const mobileMenuRef = useRef(null);
     const appLauncherRef = useRef(null);
 
@@ -23,6 +24,9 @@ export const NavBarAccueil = React.memo(function NavBarAccueil() {
             }
             if (appLauncherRef.current && !appLauncherRef.current.contains(event.target)) {
                 setIsAppLauncherOpen(false);
+            }
+            if (betaRef.current && !betaRef.current.contains(event.target)) {
+                setShowMessage(false);
             }
         };
 
@@ -47,8 +51,52 @@ export const NavBarAccueil = React.memo(function NavBarAccueil() {
                     </button>
 
                     <div className="flex items-center gap-2 ml-4">
-                        <p className="text-2xl"><img src='img/icones/Factures.png'  style={{ width: 25, height: 25, objectFit: 'contain' }} className='mb-1 w-9'/></p>
-                        <p className="text-2xl font-semibold text-gray-700">Facture</p>
+                        <p className="flex items-center gap-2" ref={betaRef}>
+                            <img
+                                src="https://presence.forma-fusion.com/img/icones/Présence.png"
+                                style={{ width: 25, height: 25, objectFit: 'contain' }}
+                                className="mb-1 w-9"
+                                alt="Icon"
+                            />
+                                <span className="relative inline-block text-2xl text-gray-700">
+                                Présence
+                                <span
+                                onClick={() => setShowMessage((prev) => !prev)}
+                                className="absolute -top-2 -right-8 text-xs px-2 py-0.5 bg-green-500 text-white rounded-full border border-white shadow-md cursor-pointer"
+                                >
+                                Beta
+                                </span>
+                            </span>
+                            {/* <img src='img/icones/Factures.png'  style={{ width: 25, height: 25, objectFit: 'contain' }} className='mb-1 w-9'/> */}
+                        </p>
+                        <AnimatePresence>
+                            {showMessage && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                transition={{ duration: 0.2 }}
+                                className="absolute top-full left-0 mt-2 w-72 bg-black text-sm text-gray-700 p-4 rounded shadow-lg border z-50 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
+                            >
+                                <p className="font-semibold mb-1">
+                                "La plateforme est en BETA ouverte !
+                                </p>
+                                <p>
+                                💬 Nous travaillons activement pour l'améliorer.{" "}
+                                <a
+                                    href="https://forma-fusion.com/contact"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-purple-600 underline cursor-pointer dark:text-purple-400"
+                                >
+                                    Contactez-nous ici
+                                </a>
+                                .
+                                </p>
+                            </motion.div>
+                            )}
+                        </AnimatePresence>
+                        {/* <p className="text-2xl font-semibold text-gray-700">Facture</p> */}
                     </div>
                 </div>
 
@@ -80,7 +128,7 @@ export const NavBarAccueil = React.memo(function NavBarAccueil() {
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: -10 }}
                                     transition={{ duration: 0.2 }}
-                                    className="absolute right-0 mt-2 z-10"
+                                    className="origin-top-right absolute right-0 mt-4 w-[90vw] max-w-md sm:max-w-xl rounded-2xl shadow-2xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 border border-gray-200/50 overflow-hidden"
                                 >
                                     <AppLauncher />
                                 </motion.div>

@@ -1,29 +1,32 @@
-
 import { ChevronDownIcon } from "lucide-react";
 import { useState, useRef, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import useApi from "../../Hooks/Api";
 import { ProjectContext } from "../../Contexts/count-project";
+import { useTranslation } from "react-i18next";
 
 // 🔹 Composant principal AllSearchBar
 export function AllSearchBar({ selected, setSelected }) {
+  const { t } = useTranslation();
   const [isAdvancedFiltersOpen, setIsAdvancedFiltersOpen] = useState(false);
-  const [filtreData , setFiltreData] = useState([]);
+  const [filtreData, setFiltreData] = useState([]);
   const { callApi } = useApi();
-  const { selected : select} = useContext(ProjectContext);
-    useEffect(()=>{
-      const fetchData = async(select) => {
-        try {
-          const res = await callApi(`/cfp/projets/filtre/${select}`);
-          setFiltreData(res.filtre);
-        } catch (error) {
-          console.log(error);
-        }
-      };
-      fetchData(select);
-    },[select]);
+  const { selected: select } = useContext(ProjectContext);
+  const role = parseInt(sessionStorage.getItem("role"));
 
-    const handleUpdateSelected = (name, values) => {
+  useEffect(() => {
+    const fetchData = async (select) => {
+      try {
+        const res = await callApi(`/cfp/projets/filtre/${select}`);
+        setFiltreData(res.filtre);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    fetchData(select);
+  }, [select]);
+
+  const handleUpdateSelected = (name, values) => {
     setSelected((prev) => ({ ...prev, [name]: values }));
   };
 
@@ -69,7 +72,7 @@ export function AllSearchBar({ selected, setSelected }) {
   };
 
   return (
-    <section className="">
+    <section>
       {/* Bouton et tags */}
       <div className="flex items-center flex-wrap gap-4">
         <button
@@ -81,7 +84,7 @@ export function AllSearchBar({ selected, setSelected }) {
           }`}
         >
           <i className="fa-solid fa-filter text-lg"></i>
-          <span>Filtres</span>
+          <span>{t("filters")}</span>
           <ChevronDownIcon
             className={`w-4 h-4 transition-transform duration-200 ${
               isAdvancedFiltersOpen ? "rotate-180" : ""
@@ -99,9 +102,13 @@ export function AllSearchBar({ selected, setSelected }) {
                 <button
                   key={key}
                   className={`flex items-center gap-2 ${bgColor} text-white px-3 py-1 rounded-full text-sm transition hover:scale-105`}
-                  onClick={() => setSelected((prev) => ({ ...prev, [key]: [] }))}
+                  onClick={() =>
+                    setSelected((prev) => ({ ...prev, [key]: [] }))
+                  }
                 >
-                  <span className="capitalize">{`${value.length} ${key}`}</span>
+                  <span className="capitalize">
+                    {t("selectedCount", { count: value.length, label: t(key) })}
+                  </span>
                   <i className="fas fa-times text-xs"></i>
                 </button>
               );
@@ -116,7 +123,9 @@ export function AllSearchBar({ selected, setSelected }) {
                     setSelected((prev) => ({ ...prev, [key]: null }))
                   }
                 >
-                  <span className="capitalize">{`1 ${key}`}</span>
+                  <span className="capitalize">
+                    {t("selectedCount", { count: 1, label: t(key) })}
+                  </span>
                   <i className="fas fa-times text-xs"></i>
                 </button>
               );
@@ -138,51 +147,61 @@ export function AllSearchBar({ selected, setSelected }) {
           >
             <DropdownSearch
               name="Entreprise"
-              label="Entreprise"
+              label={t("Entreprise")}
               data={formates.Entreprise}
               selected={selected.Entreprise}
               onChange={handleUpdateSelected}
+              t={t}
             />
             <DropdownSearch
               name="Projet"
-              label="Type de projet"
+              label={t("Type de projet")}
               data={formates.Projet}
               selected={selected.Projet}
               onChange={handleUpdateSelected}
+              t={t}
             />
             <DropdownRadio
               name="Periode"
-              label="Période de formation"
+              label={t("Période de formation")}
               selected={selected.Periode}
               onChange={(n, val) => setSelected((p) => ({ ...p, [n]: val }))}
+              t={t}
             />
             <DropdownSearch
               name="Cours"
-              label="Cours"
+              label={t("Cours")}
               data={formates.Cours}
               selected={selected.Cours}
               onChange={handleUpdateSelected}
+              t={t}
             />
             <DropdownSearch
               name="Ville"
-              label="Ville"
+              label={t("Ville")}
               data={formates.Ville}
               selected={selected.Ville}
               onChange={handleUpdateSelected}
+              t={t}
             />
-            <DropdownSearch
-              name="Formateur"
-              label="Formateur"
-              data={formates.Formateur}
-              selected={selected.Formateur}
-              onChange={handleUpdateSelected}
-            />
+            {role !== 5 && (
+              <DropdownSearch
+                name="Formateur"
+                label={t("Formateur")}
+                data={formates.Formateur}
+                selected={selected.Formateur}
+                onChange={handleUpdateSelected}
+                t={t}
+              />
+            )}
+
             <DropdownSearch
               name="Mois"
-              label="Mois"
+              label={t("Mois")}
               data={formates.Mois}
               selected={selected.Mois}
               onChange={handleUpdateSelected}
+              t={t}
             />
           </motion.div>
         )}
@@ -192,7 +211,7 @@ export function AllSearchBar({ selected, setSelected }) {
 }
 
 // 🔹 Dropdown avec recherche multi-sélection
-function DropdownSearch({ name, label, data, selected, onChange }) {
+function DropdownSearch({ name, label, data, selected, onChange, t }) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const dropdownRef = useRef();
@@ -246,7 +265,7 @@ function DropdownSearch({ name, label, data, selected, onChange }) {
           >
             <input
               type="search"
-              placeholder="Rechercher..."
+              placeholder={t("searchPlaceholder")}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full px-3 py-2 mb-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
@@ -280,18 +299,18 @@ function DropdownSearch({ name, label, data, selected, onChange }) {
 }
 
 // 🔹 Dropdown radio (période)
-function DropdownRadio({ name, label, selected, onChange }) {
+function DropdownRadio({ name, label, selected, onChange, t }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef();
 
   const options = [
-    { id: "prev_3_month", label: "3 derniers mois" },
-    { id: "prev_6_month", label: "6 derniers mois" },
-    { id: "prev_12_month", label: "12 derniers mois" },
+    { id: "prev_3_month", label: t("last_3_months") },
+    { id: "prev_6_month", label: t("last_6_months") },
+    { id: "prev_12_month", label: t("last_12_months") },
     "separator",
-    { id: "next_3_month", label: "3 prochains mois" },
-    { id: "next_6_month", label: "6 prochains mois" },
-    { id: "next_12_month", label: "12 prochains mois" },
+    { id: "next_3_month", label: t("next_3_months") },
+    { id: "next_6_month", label: t("next_6_months") },
+    { id: "next_12_month", label: t("next_12_months") },
   ];
 
   const toggle = () => setIsOpen((prev) => !prev);

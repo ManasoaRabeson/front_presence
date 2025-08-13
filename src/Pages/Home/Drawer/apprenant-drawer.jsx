@@ -1,8 +1,9 @@
-import React, {  forwardRef, useMemo } from "react";
+import React, { useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
-const ApprenantDrawer = forwardRef(({ isOpen, onClose, module }, ref) => {
-
+const ApprenantDrawer = ({ isOpen, onClose, module, ref }) => {
+  const { t } = useTranslation();
 
   const groupes = useMemo(() => {
     return module.apprs.reduce((acc, apprenant) => {
@@ -18,7 +19,7 @@ const ApprenantDrawer = forwardRef(({ isOpen, onClose, module }, ref) => {
   return (
     <>
       <AnimatePresence>
-        { isOpen && (
+        {isOpen && (
           <motion.div
             ref={ref}
             initial={{ x: "100%" }}
@@ -32,7 +33,7 @@ const ApprenantDrawer = forwardRef(({ isOpen, onClose, module }, ref) => {
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 border-b bg-gray-50 shadow-sm sticky top-0 z-10">
               <p className="text-lg font-medium text-gray-700">
-                Nombres d'apprenants :{" "}
+                {t("nombreApprenant")} :{" "}
                 <span className="font-bold">{module?.apprs.length}</span>
               </p>
               <div className="flex items-center gap-3">
@@ -139,15 +140,11 @@ const ApprenantDrawer = forwardRef(({ isOpen, onClose, module }, ref) => {
           </motion.div>
         )}
       </AnimatePresence>
-
-
     </>
   );
-});
+};
 
 export default ApprenantDrawer;
-
-
 
 // function AddApprenantDrawer({ isOpen, onClose }) {
 //   const [search, setSearch] = useState("");
@@ -302,4 +299,3 @@ export default ApprenantDrawer;
 //     </div>
 //   );
 // }
-
